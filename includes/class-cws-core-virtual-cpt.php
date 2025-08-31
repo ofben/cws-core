@@ -42,6 +42,9 @@ class CWS_Core_Virtual_CPT {
         
         // Override post meta for virtual posts
         add_action( 'init', array( $this, 'override_post_meta' ) );
+        
+        // Add filter for EtchWP to access meta data
+        add_filter( 'rest_prepare_cws_job', array( $this, 'add_meta_to_rest_response' ), 10, 3 );
     }
 
     /**
@@ -221,7 +224,25 @@ class CWS_Core_Virtual_CPT {
         $post->post_mime_type = '';
         $post->filter = 'raw';
         
-        // Add custom meta data based on actual API structure
+        // Store meta data in WordPress meta system for EtchWP access
+        $post->meta_data = array(
+            'cws_job_id' => sanitize_text_field( $job_id ),
+            'cws_job_company' => sanitize_text_field( $formatted_job['company_name'] ),
+            'cws_job_location' => sanitize_text_field( $formatted_job['primary_city'] . ', ' . $formatted_job['primary_state'] ),
+            'cws_job_salary' => sanitize_text_field( $formatted_job['salary'] ),
+            'cws_job_department' => sanitize_text_field( $formatted_job['department'] ),
+            'cws_job_category' => sanitize_text_field( $formatted_job['primary_category'] ),
+            'cws_job_status' => sanitize_text_field( $formatted_job['entity_status'] ),
+            'cws_job_type' => sanitize_text_field( $formatted_job['employment_type'] ),
+            'cws_job_url' => esc_url_raw( $formatted_job['url'] ),
+            'cws_job_seo_url' => esc_url_raw( $formatted_job['seo_url'] ),
+            'cws_job_open_date' => sanitize_text_field( $formatted_job['open_date'] ),
+            'cws_job_update_date' => sanitize_text_field( $formatted_job['update_date'] ),
+            'cws_job_industry' => sanitize_text_field( $formatted_job['industry'] ),
+            'cws_job_function' => sanitize_text_field( $formatted_job['function'] ),
+        );
+        
+        // Also keep as object properties for backward compatibility
         $post->cws_job_id = sanitize_text_field( $job_id );
         $post->cws_job_company = sanitize_text_field( $formatted_job['company_name'] );
         $post->cws_job_location = sanitize_text_field( $formatted_job['primary_city'] . ', ' . $formatted_job['primary_state'] );
@@ -270,6 +291,99 @@ class CWS_Core_Virtual_CPT {
     public function override_post_meta(): void {
         add_filter( 'get_post_metadata', array( $this, 'get_virtual_post_meta' ), 10, 4 );
         add_filter( 'get_post_meta', array( $this, 'get_virtual_post_meta' ), 10, 4 );
+        
+        // Register meta fields for REST API and EtchWP
+        add_action( 'init', array( $this, 'register_meta_fields' ) );
+    }
+
+    /**
+     * Register meta fields for the cws_job post type
+     */
+    public function register_meta_fields(): void {
+        // Register meta fields for REST API access
+        register_post_meta( 'cws_job', 'cws_job_id', array(
+            'type' => 'string',
+            'single' => true,
+            'show_in_rest' => true,
+        ) );
+        
+        register_post_meta( 'cws_job', 'cws_job_company', array(
+            'type' => 'string',
+            'single' => true,
+            'show_in_rest' => true,
+        ) );
+        
+        register_post_meta( 'cws_job', 'cws_job_location', array(
+            'type' => 'string',
+            'single' => true,
+            'show_in_rest' => true,
+        ) );
+        
+        register_post_meta( 'cws_job', 'cws_job_salary', array(
+            'type' => 'string',
+            'single' => true,
+            'show_in_rest' => true,
+        ) );
+        
+        register_post_meta( 'cws_job', 'cws_job_department', array(
+            'type' => 'string',
+            'single' => true,
+            'show_in_rest' => true,
+        ) );
+        
+        register_post_meta( 'cws_job', 'cws_job_category', array(
+            'type' => 'string',
+            'single' => true,
+            'show_in_rest' => true,
+        ) );
+        
+        register_post_meta( 'cws_job', 'cws_job_status', array(
+            'type' => 'string',
+            'single' => true,
+            'show_in_rest' => true,
+        ) );
+        
+        register_post_meta( 'cws_job', 'cws_job_type', array(
+            'type' => 'string',
+            'single' => true,
+            'show_in_rest' => true,
+        ) );
+        
+        register_post_meta( 'cws_job', 'cws_job_url', array(
+            'type' => 'string',
+            'single' => true,
+            'show_in_rest' => true,
+        ) );
+        
+        register_post_meta( 'cws_job', 'cws_job_seo_url', array(
+            'type' => 'string',
+            'single' => true,
+            'show_in_rest' => true,
+        ) );
+        
+        register_post_meta( 'cws_job', 'cws_job_open_date', array(
+            'type' => 'string',
+            'single' => true,
+            'show_in_rest' => true,
+        ) );
+        
+        register_post_meta( 'cws_job', 'cws_job_update_date', array(
+            'type' => 'string',
+            'single' => true,
+            'show_in_rest' => true,
+        ) );
+        
+        register_post_meta( 'cws_job', 'cws_job_industry', array(
+            'type' => 'string',
+            'single' => true,
+            'show_in_rest' => true,
+        ) );
+        
+        register_post_meta( 'cws_job', 'cws_job_function', array(
+            'type' => 'string',
+            'single' => true,
+            'show_in_rest' => true,
+        ) );
     }
 
     /**
@@ -286,6 +400,12 @@ class CWS_Core_Virtual_CPT {
         
         // Only handle virtual posts (negative IDs)
         if ( $post && $post->ID < 0 && $post->post_type === 'cws_job' ) {
+            // First check meta_data array (for EtchWP compatibility)
+            if ( isset( $post->meta_data ) && is_array( $post->meta_data ) && isset( $post->meta_data[ $key ] ) ) {
+                return $single ? $post->meta_data[ $key ] : array( $post->meta_data[ $key ] );
+            }
+            
+            // Fallback to object properties
             $meta_key = 'cws_job_' . str_replace( 'cws_job_', '', $key );
             
             if ( isset( $post->$meta_key ) ) {
@@ -332,5 +452,36 @@ class CWS_Core_Virtual_CPT {
         if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
             error_log( 'CWS Core Virtual CPT Debug: ' . $message );
         }
+    }
+
+    /**
+     * Add meta data to REST API response for EtchWP
+     *
+     * @param \WP_REST_Response $response The response object.
+     * @param \WP_Post         $post     The post object.
+     * @param \WP_REST_Request $request  The request object.
+     * @return \WP_REST_Response
+     */
+    public function add_meta_to_rest_response( $response, $post, $request ) {
+        // Check if this is a virtual post (negative ID)
+        if ( $post->ID < 0 && $post->post_type === 'cws_job' ) {
+            // Get the virtual post data
+            $job_id = get_post_meta( $post->ID, 'cws_job_id', true );
+            if ( ! $job_id ) {
+                // Try to extract job ID from post slug
+                $slug_parts = explode( '-', $post->post_name );
+                $job_id = end( $slug_parts );
+            }
+            
+            if ( $job_id ) {
+                $virtual_post = $this->create_virtual_job_post( $job_id );
+                if ( $virtual_post && isset( $virtual_post->meta_data ) ) {
+                    // Add meta data to the response
+                    $response->data['meta'] = $virtual_post->meta_data;
+                }
+            }
+        }
+        
+        return $response;
     }
 }
