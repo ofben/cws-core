@@ -210,11 +210,26 @@ class CWS_Core {
      * Handle job requests
      */
     public function handle_job_request() {
-        $job_id = get_query_var( 'cws_job_id' );
+        $job_id = sanitize_text_field( get_query_var( 'cws_job_id' ) );
         
         if ( ! empty( $job_id ) ) {
-            // Set up the job page template
-            add_filter( 'template_include', array( $this, 'load_job_template' ) );
+            // Create virtual post for this job
+            if ( $this->virtual_cpt ) {
+                $virtual_post = $this->virtual_cpt->create_virtual_job_post( $job_id );
+                
+                if ( $virtual_post ) {
+                    // Set up the post for EtchWP
+                    global $post;
+                    $post = $virtual_post;
+                    setup_postdata( $post );
+                    
+                    // Let EtchWP handle the template
+                    return;
+                }
+            }
+            
+            // Log error if virtual post creation failed
+            $this->log( 'Failed to create virtual post for job: ' . $job_id, 'error' );
         }
     }
 

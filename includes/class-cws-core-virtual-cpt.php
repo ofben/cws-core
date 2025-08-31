@@ -176,7 +176,7 @@ class CWS_Core_Virtual_CPT {
      * @param string $job_id The job ID.
      * @return \stdClass|false
      */
-    private function create_virtual_job_post( string $job_id ) {
+    public function create_virtual_job_post( string $job_id ) {
         if ( ! $this->plugin || ! $this->plugin->api ) {
             $this->log_error( 'Plugin or API not available for job: ' . $job_id );
             return false;
