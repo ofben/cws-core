@@ -55,6 +55,16 @@ class CWS_Core_Virtual_CPT {
         
         // Hook into the query preparation to ensure meta data is included
         add_filter( 'posts_pre_query', array( $this, 'prepare_virtual_posts_query' ), 10, 2 );
+        
+        // Add more aggressive hooks for EtchWP compatibility
+        add_filter( 'posts_clauses', array( $this, 'modify_posts_clauses' ), 10, 2 );
+        add_filter( 'posts_where', array( $this, 'modify_posts_where' ), 10, 2 );
+        
+        // Hook into the final query results
+        add_filter( 'posts_selection', array( $this, 'modify_posts_selection' ), 10, 2 );
+        
+        // Hook into get_post to ensure meta data is always available
+        add_filter( 'get_post', array( $this, 'add_meta_to_post' ), 10, 2 );
     }
 
     /**
@@ -258,7 +268,12 @@ class CWS_Core_Virtual_CPT {
         // Also store as object properties for backward compatibility
         $post->meta_data = $meta_data;
         
-        // Also keep as object properties for backward compatibility
+        // Add individual meta properties directly to the post object
+        foreach ( $meta_data as $key => $value ) {
+            $post->$key = $value;
+        }
+        
+        // Also keep legacy properties for backward compatibility
         $post->cws_job_id = sanitize_text_field( $job_id );
         $post->cws_job_company = sanitize_text_field( $formatted_job['company_name'] );
         $post->cws_job_location = sanitize_text_field( $formatted_job['primary_city'] . ', ' . $formatted_job['primary_state'] );
@@ -274,6 +289,8 @@ class CWS_Core_Virtual_CPT {
         $post->cws_job_industry = sanitize_text_field( $formatted_job['industry'] );
         $post->cws_job_function = sanitize_text_field( $formatted_job['function'] );
         $post->cws_job_raw_data = $formatted_job['raw_data'];
+        
+        $this->log_debug( 'Virtual post created with meta data: ' . print_r( $meta_data, true ) );
         
         return $post;
     }
@@ -606,7 +623,7 @@ class CWS_Core_Virtual_CPT {
             return $posts;
         }
 
-        $this->log_debug( 'Processing ' . count( $posts ) . ' posts for cws_job query' );
+        $this->log_debug( 'add_meta_to_posts_results called - Processing ' . count( $posts ) . ' posts for cws_job query' );
 
         foreach ( $posts as $post ) {
             // Check if this is a virtual post (negative ID)
@@ -656,6 +673,8 @@ class CWS_Core_Virtual_CPT {
             return $posts;
         }
 
+        $this->log_debug( 'prepare_virtual_posts_query called for cws_job query' );
+
         // If posts are already set (from our replace_job_query), ensure meta data is attached
         if ( $posts && is_array( $posts ) ) {
             foreach ( $posts as $post ) {
@@ -681,5 +700,91 @@ class CWS_Core_Virtual_CPT {
         }
 
         return $posts;
+    }
+
+    /**
+     * Modify posts clauses to include meta data
+     *
+     * @param array    $clauses Query clauses.
+     * @param \WP_Query $query   The query object.
+     * @return array
+     */
+    public function modify_posts_clauses( $clauses, $query ) {
+        // Only process cws_job queries
+        if ( $query->get( 'post_type' ) !== 'cws_job' ) {
+            return $clauses;
+        }
+
+        $this->log_debug( 'modify_posts_clauses called for cws_job query' );
+        return $clauses;
+    }
+
+    /**
+     * Modify posts where clause
+     *
+     * @param string   $where WHERE clause.
+     * @param \WP_Query $query The query object.
+     * @return string
+     */
+    public function modify_posts_where( $where, $query ) {
+        // Only process cws_job queries
+        if ( $query->get( 'post_type' ) !== 'cws_job' ) {
+            return $where;
+        }
+
+        $this->log_debug( 'modify_posts_where called for cws_job query' );
+        return $where;
+    }
+
+    /**
+     * Modify posts selection
+     *
+     * @param string   $posts Posts string.
+     * @param \WP_Query $query The query object.
+     * @return string
+     */
+    public function modify_posts_selection( $posts, $query ) {
+        // Only process cws_job queries
+        if ( $query->get( 'post_type' ) !== 'cws_job' ) {
+            return $posts;
+        }
+
+        $this->log_debug( 'modify_posts_selection called for cws_job query' );
+        return $posts;
+    }
+
+    /**
+     * Add meta data to post when retrieved
+     *
+     * @param \WP_Post $post Post object.
+     * @param string   $output Output type.
+     * @return \WP_Post
+     */
+    public function add_meta_to_post( $post, $output ) {
+        // Only handle cws_job posts with negative IDs (virtual posts)
+        if ( $post && $post->post_type === 'cws_job' && $post->ID < 0 ) {
+            $this->log_debug( 'add_meta_to_post called for virtual post: ' . $post->post_name );
+            
+            // Extract job ID from post slug
+            $slug_parts = explode( '-', $post->post_name );
+            $job_id = end( $slug_parts );
+            
+            if ( $job_id && is_numeric( $job_id ) ) {
+                $virtual_post = $this->create_virtual_job_post( $job_id );
+                if ( $virtual_post && isset( $virtual_post->meta_data ) ) {
+                    // Add meta data to the post object
+                    $post->meta_data = $virtual_post->meta_data;
+                    
+                    // Also add individual meta properties
+                    foreach ( $virtual_post->meta_data as $key => $value ) {
+                        $post->$key = $value;
+                    }
+                    
+                    $this->log_debug( 'Meta data added to post: ' . print_r( $virtual_post->meta_data, true ) );
+                }
+            }
+        }
+        
+        return $post;
     }
 }
