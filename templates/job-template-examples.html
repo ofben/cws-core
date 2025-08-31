@@ -1,0 +1,278 @@
+<section data-etch-element="section" data-etch-context="eyJvcmlnaW4iOiJldGNoIiwibmFtZSI6IlNlY3Rpb24iLCJoaWRkZW4iOmZhbHNlLCJzdHJ1Y3R1cmVTdGF0ZSI6Im9wZW4iLCJyZWYiOiJqdHgxNTB1In0=">
+  <div data-etch-element="container" data-etch-context="eyJvcmlnaW4iOiJldGNoIiwibmFtZSI6IkNvbnRhaW5lciIsImhpZGRlbiI6ZmFsc2UsInN0cnVjdHVyZVN0YXRlIjoib3BlbiIsInJlZiI6InZweHI0ankifQ==">
+    
+    <!-- Job Header Section -->
+    <div class="job-header" data-etch-context="eyJvcmlnaW4iOiJldGNoIiwiaGlkZGVuIjpmYWxzZSwic3RydWN0dXJlU3RhdGUiOiJvcGVuIiwicmVmIjoidTNqOGgzMyJ9">
+      <h1 data-etch-context="eyJvcmlnaW4iOiJldGNoIiwiaGlkZGVuIjpmYWxzZSwic3RydWN0dXJlU3RhdGUiOiJvcGVuIiwicmVmIjoiMWszNWlkciJ9">
+        <!-- Title variations -->
+        {this.title} <!-- Direct property -->
+        {this.meta.cws_job_title} <!-- Meta namespace -->
+        {this.acf.cws_job_title} <!-- ACF namespace -->
+      </h1>
+      <p class="job-id" data-etch-context="eyJvcmlnaW4iOiJldGNoIiwiaGlkZGVuIjpmYWxzZSwicmVmIjoibGxlamMxeCJ9">
+        Job ID: {this.meta.cws_job_id} | {this.acf.cws_job_id} | {this.cws_job_id}
+      </p>
+    </div>
+
+    <!-- Basic Job Information -->
+    <div class="job-basic-info" data-etch-context="eyJvcmlnaW4iOiJldGNoIiwiaGlkZGVuIjpmYWxzZSwic3RydWN0dXJlU3RhdGUiOiJvcGVuIiwicmVmIjoiOTR1YW95MSJ9">
+      <h3>Basic Job Information</h3>
+      
+      <div class="meta-item" data-etch-context="eyJvcmlnaW4iOiJldGNoIiwiaGlkZGVuIjpmYWxzZSwicmVmIjoiOTJnNHQxbSJ9">
+        <strong>Company (Meta):</strong> {this.meta.cws_job_company}
+      </div>
+      <div class="meta-item">
+        <strong>Company (ACF):</strong> {this.acf.cws_job_company}
+      </div>
+      <div class="meta-item">
+        <strong>Company (Direct):</strong> {this.cws_job_company}
+      </div>
+      
+      <div class="meta-item">
+        <strong>Company Name (Meta):</strong> {this.meta.cws_job_company_name}
+      </div>
+      <div class="meta-item">
+        <strong>Company Name (ACF):</strong> {this.acf.cws_job_company_name}
+      </div>
+      
+      <div class="meta-item">
+        <strong>Description (Meta):</strong> {this.meta.cws_job_description}
+      </div>
+      <div class="meta-item">
+        <strong>Description (ACF):</strong> {this.acf.cws_job_description}
+      </div>
+      
+      <div class="meta-item">
+        <strong>Entity Status (Meta):</strong> {this.meta.cws_job_entity_status}
+      </div>
+      <div class="meta-item">
+        <strong>Entity Status (ACF):</strong> {this.acf.cws_job_entity_status}
+      </div>
+    </div>
+
+    <!-- Location Information -->
+    <div class="job-location" data-etch-context="eyJvcmlnaW4iOiJldGNoIiwiaGlkZGVuIjpmYWxzZSwic3RydWN0dXJlU3RhdGUiOiJvcGVuIiwicmVmIjoiY2R2Zjl6eiJ9">
+      <h3>Location Information</h3>
+      
+      <div class="meta-item">
+        <strong>Location (Meta):</strong> {this.meta.cws_job_location}
+      </div>
+      <div class="meta-item">
+        <strong>Location (ACF):</strong> {this.acf.cws_job_location}
+      </div>
+      <div class="meta-item">
+        <strong>Location (Direct):</strong> {this.cws_job_location}
+      </div>
+      
+      <div class="meta-item">
+        <strong>City (Meta):</strong> {this.meta.cws_job_primary_city}
+      </div>
+      <div class="meta-item">
+        <strong>City (ACF):</strong> {this.acf.cws_job_primary_city}
+      </div>
+      
+      <div class="meta-item">
+        <strong>State (Meta):</strong> {this.meta.cws_job_primary_state}
+      </div>
+      <div class="meta-item">
+        <strong>State (ACF):</strong> {this.acf.cws_job_primary_state}
+      </div>
+      
+      <div class="meta-item">
+        <strong>Country (Meta):</strong> {this.meta.cws_job_primary_country}
+      </div>
+      <div class="meta-item">
+        <strong>Country (ACF):</strong> {this.acf.cws_job_primary_country}
+      </div>
+      
+      <div class="meta-item">
+        <strong>Primary Location (Meta):</strong> {this.meta.cws_job_primary_location}
+      </div>
+      <div class="meta-item">
+        <strong>Primary Location (ACF):</strong> {this.acf.cws_job_primary_location}
+      </div>
+    </div>
+
+    <!-- Job Classification -->
+    <div class="job-classification" data-etch-context="eyJvcmlnaW4iOiJldGNoIiwiaGlkZGVuIjpmYWxzZSwic3RydWN0dXJlU3RhdGUiOiJvcGVuIiwicmVmIjoiNGRxOGM0dCJ9">
+      <h3>Job Classification</h3>
+      
+      <div class="meta-item">
+        <strong>Category (Meta):</strong> {this.meta.cws_job_category}
+      </div>
+      <div class="meta-item">
+        <strong>Category (ACF):</strong> {this.acf.cws_job_category}
+      </div>
+      <div class="meta-item">
+        <strong>Category (Direct):</strong> {this.cws_job_category}
+      </div>
+      
+      <div class="meta-item">
+        <strong>Primary Category (Meta):</strong> {this.meta.cws_job_primary_category}
+      </div>
+      <div class="meta-item">
+        <strong>Primary Category (ACF):</strong> {this.acf.cws_job_primary_category}
+      </div>
+      
+      <div class="meta-item">
+        <strong>Department (Meta):</strong> {this.meta.cws_job_department}
+      </div>
+      <div class="meta-item">
+        <strong>Department (ACF):</strong> {this.acf.cws_job_department}
+      </div>
+      <div class="meta-item">
+        <strong>Department (Direct):</strong> {this.cws_job_department}
+      </div>
+      
+      <div class="meta-item">
+        <strong>Industry (Meta):</strong> {this.meta.cws_job_industry}
+      </div>
+      <div class="meta-item">
+        <strong>Industry (ACF):</strong> {this.acf.cws_job_industry}
+      </div>
+      <div class="meta-item">
+        <strong>Industry (Direct):</strong> {this.cws_job_industry}
+      </div>
+      
+      <div class="meta-item">
+        <strong>Function (Meta):</strong> {this.meta.cws_job_function}
+      </div>
+      <div class="meta-item">
+        <strong>Function (ACF):</strong> {this.acf.cws_job_function}
+      </div>
+      <div class="meta-item">
+        <strong>Function (Direct):</strong> {this.cws_job_function}
+      </div>
+    </div>
+
+    <!-- Employment Details -->
+    <div class="job-employment" data-etch-context="eyJvcmlnaW4iOiJldGNoIiwiaGlkZGVuIjpmYWxzZSwic3RydWN0dXJlU3RhdGUiOiJvcGVuIiwicmVmIjoiY2VlN2hvaCJ9">
+      <h3>Employment Details</h3>
+      
+      <div class="meta-item">
+        <strong>Salary (Meta):</strong> {this.meta.cws_job_salary}
+      </div>
+      <div class="meta-item">
+        <strong>Salary (ACF):</strong> {this.acf.cws_job_salary}
+      </div>
+      <div class="meta-item">
+        <strong>Salary (Direct):</strong> {this.cws_job_salary}
+      </div>
+      
+      <div class="meta-item">
+        <strong>Employment Type (Meta):</strong> {this.meta.cws_job_employment_type}
+      </div>
+      <div class="meta-item">
+        <strong>Employment Type (ACF):</strong> {this.acf.cws_job_employment_type}
+      </div>
+      
+      <div class="meta-item">
+        <strong>Status (Meta):</strong> {this.meta.cws_job_status}
+      </div>
+      <div class="meta-item">
+        <strong>Status (ACF):</strong> {this.acf.cws_job_status}
+      </div>
+      <div class="meta-item">
+        <strong>Status (Direct):</strong> {this.cws_job_status}
+      </div>
+      
+      <div class="meta-item">
+        <strong>Type (Meta):</strong> {this.meta.cws_job_type}
+      </div>
+      <div class="meta-item">
+        <strong>Type (ACF):</strong> {this.acf.cws_job_type}
+      </div>
+      <div class="meta-item">
+        <strong>Type (Direct):</strong> {this.cws_job_type}
+      </div>
+    </div>
+
+    <!-- URLs and Links -->
+    <div class="job-urls" data-etch-context="eyJvcmlnaW4iOiJldGNoIiwiaGlkZGVuIjpmYWxzZSwic3RydWN0dXJlU3RhdGUiOiJvcGVuIiwicmVmIjoiaWNucjVodyJ9">
+      <h3>URLs and Links</h3>
+      
+      <div class="meta-item">
+        <strong>Application URL (Meta):</strong> <a href="{this.meta.cws_job_url}">{this.meta.cws_job_url}</a>
+      </div>
+      <div class="meta-item">
+        <strong>Application URL (ACF):</strong> <a href="{this.acf.cws_job_url}">{this.acf.cws_job_url}</a>
+      </div>
+      <div class="meta-item">
+        <strong>Application URL (Direct):</strong> <a href="{this.cws_job_url}">{this.cws_job_url}</a>
+      </div>
+      
+      <div class="meta-item">
+        <strong>SEO URL (Meta):</strong> <a href="{this.meta.cws_job_seo_url}">{this.meta.cws_job_seo_url}</a>
+      </div>
+      <div class="meta-item">
+        <strong>SEO URL (ACF):</strong> <a href="{this.acf.cws_job_seo_url}">{this.acf.cws_job_seo_url}</a>
+      </div>
+    </div>
+
+    <!-- Dates -->
+    <div class="job-dates" data-etch-context="eyJvcmlnaW4iOiJldGNoIiwiaGlkZGVuIjpmYWxzZSwic3RydWN0dXJlU3RhdGUiOiJvcGVuIiwicmVmIjoiem5neXY2byJ9">
+      <h3>Important Dates</h3>
+      
+      <div class="meta-item">
+        <strong>Open Date (Meta):</strong> {this.meta.cws_job_open_date}
+      </div>
+      <div class="meta-item">
+        <strong>Open Date (ACF):</strong> {this.acf.cws_job_open_date}
+      </div>
+      
+      <div class="meta-item">
+        <strong>Update Date (Meta):</strong> {this.meta.cws_job_update_date}
+      </div>
+      <div class="meta-item">
+        <strong>Update Date (ACF):</strong> {this.acf.cws_job_update_date}
+      </div>
+    </div>
+
+    <!-- Job Description -->
+    <div class="job-description" data-etch-context="eyJvcmlnaW4iOiJldGNoIiwiaGlkZGVuIjpmYWxzZSwic3RydWN0dXJlU3RhdGUiOiJvcGVuIiwicmVmIjoiY2VlN2hvaCJ9">
+      <h3>Job Description</h3>
+      <div class="description-content">
+        <!-- Content variations -->
+        <h4>From Content Property:</h4>
+        <div>{this.content}</div>
+        
+        <h4>From Meta Description:</h4>
+        <div>{this.meta.cws_job_description}</div>
+        
+        <h4>From ACF Description:</h4>
+        <div>{this.acf.cws_job_description}</div>
+      </div>
+    </div>
+
+    <!-- Apply Button -->
+    <div class="job-apply" data-etch-context="eyJvcmlnaW4iOiJldGNoIiwiaGlkZGVuIjpmYWxzZSwic3RydWN0dXJlU3RhdGUiOiJvcGVuIiwicmVmIjoiaWNucjVodyJ9">
+      <h3>Apply for Position</h3>
+      
+      <!-- Apply button variations -->
+      <a href="{this.meta.cws_job_url}" class="apply-button" data-etch-context="eyJvcmlnaW4iOiJldGNoIiwiaGlkZGVuIjpmYWxzZSwic3RydWN0dXJlU3RhdGUiOiJvcGVuIiwicmVmIjoiem5neXY2byJ9">
+        Apply via Meta URL
+      </a>
+      
+      <a href="{this.acf.cws_job_url}" class="apply-button">
+        Apply via ACF URL
+      </a>
+      
+      <a href="{this.cws_job_url}" class="apply-button">
+        Apply via Direct URL
+      </a>
+    </div>
+
+    <!-- Raw Data (for debugging) -->
+    <div class="job-raw-data" data-etch-context="eyJvcmlnaW4iOiJldGNoIiwiaGlkZGVuIjpmYWxzZSwic3RydWN0dXJlU3RhdGUiOiJvcGVuIiwicmVmIjoiem5neXY2byJ9">
+      <h3>Raw Data (Debug)</h3>
+      <div class="raw-data-content">
+        <h4>Raw Data from Meta:</h4>
+        <pre>{this.meta.cws_job_raw_data}</pre>
+        
+        <h4>Raw Data from ACF:</h4>
+        <pre>{this.acf.cws_job_raw_data}</pre>
+      </div>
+    </div>
+
+  </div>
+</section>

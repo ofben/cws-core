@@ -764,9 +764,8 @@ class CWS_Core_Virtual_CPT {
     public function add_meta_to_rest_response( $response, $post, $request ) {
         // Check if this is a virtual post (negative ID)
         if ( $post->ID < 0 && $post->post_type === 'cws_job' ) {
-            // Extract job ID from post slug for virtual posts
-            $slug_parts = explode( '-', $post->post_name );
-            $job_id = end( $slug_parts );
+            // For virtual posts, the post_name is the job ID
+            $job_id = $post->post_name;
             
             if ( $job_id && is_numeric( $job_id ) ) {
                 $virtual_post = $this->create_virtual_job_post( $job_id );
