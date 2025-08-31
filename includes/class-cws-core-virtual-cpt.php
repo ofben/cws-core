@@ -49,6 +49,9 @@ class CWS_Core_Virtual_CPT {
         // Add filter for EtchWP to access meta data
         add_filter( 'rest_prepare_cws_job', array( $this, 'add_meta_to_rest_response' ), 10, 3 );
         
+        // Add filter for schema post ACF data in REST API
+        add_filter( 'rest_prepare_cws_job', array( $this, 'add_acf_to_schema_post' ), 15, 3 );
+        
         // Hook into WordPress query results to add meta data
         add_filter( 'the_posts', array( $this, 'add_meta_to_query_results' ), 10, 2 );
         add_filter( 'posts_results', array( $this, 'add_meta_to_posts_results' ), 10, 2 );
@@ -680,11 +683,50 @@ class CWS_Core_Virtual_CPT {
                     // Add meta data to the response
                     $response->data['meta'] = $virtual_post->meta_data;
                     
+                    // Add ACF-style namespace for EtchWP compatibility
+                    $response->data['acf'] = $virtual_post->meta_data;
+                    
                     // Also add individual meta fields to the response for better compatibility
                     foreach ( $virtual_post->meta_data as $key => $value ) {
                         $response->data[ $key ] = $value;
                     }
                 }
+            }
+        }
+        
+        return $response;
+    }
+
+    /**
+     * Add ACF data to schema post REST API response
+     *
+     * @param \WP_REST_Response $response The response object.
+     * @param \WP_Post         $post     The post object.
+     * @param \WP_REST_Request $request  The request object.
+     * @return \WP_REST_Response
+     */
+    public function add_acf_to_schema_post( $response, $post, $request ) {
+        // Check if this is the schema post (positive ID with _cws_schema_post meta)
+        if ( $post->ID > 0 && $post->post_type === 'cws_job' ) {
+            $is_schema_post = get_post_meta( $post->ID, '_cws_schema_post', true );
+            
+            if ( $is_schema_post ) {
+                // Get all meta fields for the schema post
+                $meta_fields = [
+                    'cws_job_id', 'cws_job_company', 'cws_job_location', 'cws_job_salary',
+                    'cws_job_department', 'cws_job_category', 'cws_job_status', 'cws_job_type',
+                    'cws_job_url', 'cws_job_seo_url', 'cws_job_open_date', 'cws_job_update_date',
+                    'cws_job_industry', 'cws_job_function'
+                ];
+                
+                $acf_data = [];
+                foreach ( $meta_fields as $field ) {
+                    $value = get_post_meta( $post->ID, $field, true );
+                    $acf_data[ $field ] = $value;
+                }
+                
+                // Add ACF data to the response
+                $response->data['acf'] = $acf_data;
             }
         }
         
@@ -1284,12 +1326,15 @@ class CWS_Core_Virtual_CPT {
                     'cws_job_industry', 'cws_job_function'
                 ];
                 
-                $schema_post->meta_data = [];
-                foreach ($meta_fields as $field) {
-                    $value = get_post_meta($schema_post->ID, $field, true);
-                    $schema_post->meta_data[$field] = $value;
-                    $schema_post->$field = $value; // Also add as direct properties
-                }
+                            $schema_post->meta_data = [];
+            foreach ($meta_fields as $field) {
+                $value = get_post_meta($schema_post->ID, $field, true);
+                $schema_post->meta_data[$field] = $value;
+                $schema_post->$field = $value; // Also add as direct properties
+            }
+            
+            // Add ACF-style data for EtchWP compatibility
+            $schema_post->acf = $schema_post->meta_data;
                 
                 return $schema_post;
             }
