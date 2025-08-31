@@ -272,7 +272,7 @@ class CWS_Core_Virtual_CPT {
         $post->post_date_gmt = current_time( 'mysql', 1 );
         $post->post_modified = current_time( 'mysql' );
         $post->post_modified_gmt = current_time( 'mysql', 1 );
-        $post->post_name = sanitize_title( $formatted_job['title'] . '-' . $job_id );
+        $post->post_name = $job_id; // Use just the job ID for the slug
         $post->post_parent = 0;
         $post->guid = esc_url( home_url( '/' . sanitize_title( get_option( 'cws_core_job_slug', 'job' ) ) . '/' . $job_id . '/' ) );
         $post->comment_status = 'closed';
