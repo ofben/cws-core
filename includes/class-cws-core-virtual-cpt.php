@@ -1171,7 +1171,7 @@ class CWS_Core_Virtual_CPT {
 
         // Show virtual posts
         echo '<h2>Virtual Posts (from API):</h2>';
-        $job_ids = $this->core->get_available_job_ids();
+        $job_ids = $this->get_configured_job_ids();
         if (!empty($job_ids)) {
             echo '<table class="wp-list-table widefat fixed striped">';
             echo '<thead><tr><th>Job ID</th><th>Title</th><th>Company</th><th>Location</th></tr></thead>';
