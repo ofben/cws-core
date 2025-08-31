@@ -8,12 +8,40 @@
  * IMPORTANT: Remove this file after testing for security reasons.
  */
 
-// Load WordPress
-require_once( dirname( __FILE__ ) . '/wp-load.php' );
+// Try to load WordPress from common locations
+$wp_load_paths = array(
+    dirname( __FILE__ ) . '/wp-load.php',
+    dirname( dirname( __FILE__ ) ) . '/wp-load.php',
+    dirname( dirname( dirname( __FILE__ ) ) ) . '/wp-load.php',
+    dirname( dirname( dirname( dirname( __FILE__ ) ) ) ) . '/wp-load.php',
+);
+
+$wp_loaded = false;
+foreach ( $wp_load_paths as $path ) {
+    if ( file_exists( $path ) ) {
+        require_once( $path );
+        $wp_loaded = true;
+        break;
+    }
+}
+
+if ( ! $wp_loaded ) {
+    die( 'Could not load WordPress. Please ensure this file is in the correct location relative to wp-load.php' );
+}
+
+// Check if WordPress is loaded
+if ( ! function_exists( 'wp_die' ) ) {
+    die( 'WordPress is not properly loaded' );
+}
 
 // Check if user is logged in and has admin privileges
 if ( ! current_user_can( 'manage_options' ) ) {
     wp_die( 'Access denied. Admin privileges required.' );
+}
+
+// Check if CWS Core plugin is active
+if ( ! class_exists( 'CWS_Core\\CWS_Core' ) ) {
+    wp_die( 'CWS Core plugin is not active. Please activate it first.' );
 }
 
 // Get the CWS Core plugin instance
@@ -41,7 +69,7 @@ if ( in_array( 'cws_job', $post_types ) ) {
 
 // Test 3: Test virtual post creation
 echo '<h2>Test 3: Virtual Post Creation</h2>';
-$test_job_id = '22026695';
+$test_job_id = '16873230'; // Use the job ID that's working
 $virtual_post = $cws_core->virtual_cpt->create_virtual_job_post( $test_job_id );
 
 if ( $virtual_post ) {
@@ -117,10 +145,24 @@ if ( ! $job_rule_found ) {
     echo '<p><a href="' . admin_url( 'options-general.php?page=cws-core-settings' ) . '">Go to CWS Core Settings</a></p>';
 }
 
+// Test 8: Check if the working job page is accessible
+echo '<h2>Test 8: Working Job Page Verification</h2>';
+$working_job_url = home_url( '/job/16873230/' );
+echo '<p><strong>Working Job URL:</strong> <a href="' . esc_url( $working_job_url ) . '" target="_blank">' . esc_url( $working_job_url ) . '</a></p>';
+
+// Test 9: Check WordPress debug log for any errors
+echo '<h2>Test 9: Debug Information</h2>';
+if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+    echo '<p style="color: green;">✓ WordPress debug mode is enabled</p>';
+    echo '<p><strong>Debug Log Location:</strong> ' . esc_html( WP_CONTENT_DIR . '/debug.log' ) . '</p>';
+} else {
+    echo '<p style="color: orange;">⚠ WordPress debug mode is disabled. Enable it to see detailed error logs.</p>';
+}
+
 echo '<h2>Next Steps</h2>';
 echo '<p>If all tests pass, you can:</p>';
 echo '<ol>';
-echo '<li>Visit <a href="' . home_url( '/job/22026695/' ) . '">/job/22026695/</a> to test the job page</li>';
+echo '<li>Visit <a href="' . home_url( '/job/16873230/' ) . '">/job/16873230/</a> to test the job page</li>';
 echo '<li>Create an EtchWP template for the cws_job post type</li>';
 echo '<li>Test job queries in EtchWP</li>';
 echo '</ol>';

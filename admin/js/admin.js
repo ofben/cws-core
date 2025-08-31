@@ -33,6 +33,9 @@
             
             // URL management
             $('#cws-core-flush-rules').on('click', this.flushRewriteRules);
+            
+            // Virtual CPT testing
+            $('#cws-core-test-virtual-cpt').on('click', this.testVirtualCPT);
         },
 
         /**
@@ -194,6 +197,98 @@
                 },
                 complete: function() {
                     $button.prop('disabled', false).text('View Stats');
+                }
+            });
+        },
+
+        /**
+         * Test virtual CPT functionality
+         */
+        testVirtualCPT: function(e) {
+            e.preventDefault();
+            
+            var $button = $(this);
+            var $result = $('#cws-core-virtual-cpt-result');
+            
+            // Disable button and show loading
+            $button.prop('disabled', true).text('Testing...');
+            $result.removeClass('success error').addClass('loading').html(
+                '<span class="cws-core-status-icon"></span>Testing virtual CPT functionality...'
+            );
+
+            // Make AJAX request
+            $.ajax({
+                url: cws_core_admin.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'cws_core_test_virtual_cpt',
+                    nonce: cws_core_admin.nonces.test_virtual_cpt
+                },
+                success: function(response) {
+                    if (response.success) {
+                        var results = response.data;
+                        var resultsHtml = '<div class="cws-core-test-results">';
+                        resultsHtml += '<h4>Virtual CPT Test Results</h4>';
+                        resultsHtml += '<ul>';
+                        
+                        // Virtual CPT Class
+                        var status = results.virtual_cpt_class === 'success' ? '✓' : '✗';
+                        var color = results.virtual_cpt_class === 'success' ? 'green' : 'red';
+                        resultsHtml += '<li style="color: ' + color + ';">' + status + ' Virtual CPT Class: ' + (results.virtual_cpt_class === 'success' ? 'Loaded' : 'Not loaded') + '</li>';
+                        
+                        // Post Type Registration
+                        status = results.post_type_registered === 'success' ? '✓' : '✗';
+                        color = results.post_type_registered === 'success' ? 'green' : 'red';
+                        resultsHtml += '<li style="color: ' + color + ';">' + status + ' Post Type Registration: ' + (results.post_type_registered === 'success' ? 'Registered' : 'Not registered') + '</li>';
+                        
+                        // Virtual Post Creation
+                        status = results.virtual_post_creation === 'success' ? '✓' : '✗';
+                        color = results.virtual_post_creation === 'success' ? 'green' : 'red';
+                        resultsHtml += '<li style="color: ' + color + ';">' + status + ' Virtual Post Creation: ' + (results.virtual_post_creation === 'success' ? 'Success' : 'Failed') + '</li>';
+                        
+                        // API Connection
+                        status = results.api_connection === 'success' ? '✓' : '✗';
+                        color = results.api_connection === 'success' ? 'green' : 'red';
+                        resultsHtml += '<li style="color: ' + color + ';">' + status + ' API Connection: ' + (results.api_connection === 'success' ? 'Success' : 'Failed') + '</li>';
+                        
+                        // Cache Functionality
+                        status = results.cache_functionality === 'success' ? '✓' : '✗';
+                        color = results.cache_functionality === 'success' ? 'green' : 'red';
+                        resultsHtml += '<li style="color: ' + color + ';">' + status + ' Cache Functionality: ' + (results.cache_functionality === 'success' ? 'Working' : 'Failed') + '</li>';
+                        
+                        resultsHtml += '</ul>';
+                        
+                        // Show virtual post data if available
+                        if (results.virtual_post_data) {
+                            resultsHtml += '<div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 3px; font-size: 12px;">';
+                            resultsHtml += '<strong>Virtual Post Data:</strong><br>';
+                            resultsHtml += 'ID: ' + results.virtual_post_data.id + '<br>';
+                            resultsHtml += 'Post Type: ' + results.virtual_post_data.post_type + '<br>';
+                            resultsHtml += 'Title: ' + results.virtual_post_data.title + '<br>';
+                            resultsHtml += 'Job ID: ' + results.virtual_post_data.job_id + '<br>';
+                            resultsHtml += 'Company: ' + results.virtual_post_data.company + '<br>';
+                            resultsHtml += 'Location: ' + results.virtual_post_data.location;
+                            resultsHtml += '</div>';
+                        }
+                        
+                        resultsHtml += '</div>';
+                        
+                        $result.removeClass('loading').addClass('success').html(
+                            '<span class="cws-core-status-icon success"></span>Virtual CPT test completed.' + resultsHtml
+                        );
+                    } else {
+                        $result.removeClass('loading').addClass('error').html(
+                            '<span class="cws-core-status-icon error"></span>' + (response.data ? response.data.message : 'Virtual CPT test failed')
+                        );
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $result.removeClass('loading').addClass('error').html(
+                        '<span class="cws-core-status-icon error"></span>AJAX Error: ' + error
+                    );
+                },
+                complete: function() {
+                    $button.prop('disabled', false).text('Test Virtual CPT');
                 }
             });
         },

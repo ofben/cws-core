@@ -57,6 +57,7 @@ class CWS_Core_Admin {
         
         // Add AJAX handlers
         add_action( 'wp_ajax_cws_core_flush_rules', array( $this, 'flush_rewrite_rules_ajax' ) );
+        add_action( 'wp_ajax_cws_core_test_virtual_cpt', array( $this, 'test_virtual_cpt_ajax' ) );
         
         error_log( 'CWS Core: Admin hooks registered successfully' );
     }
@@ -256,6 +257,7 @@ class CWS_Core_Admin {
                     'clear_cache'  => wp_create_nonce( 'cws_core_clear_cache' ),
                     'cache_stats'  => wp_create_nonce( 'cws_core_get_cache_stats' ),
                     'flush_rules'  => wp_create_nonce( 'cws_core_flush_rules' ),
+                    'test_virtual_cpt' => wp_create_nonce( 'cws_core_test_virtual_cpt' ),
                 ),
                 'strings'  => array(
                     'testing_connection' => __( 'Testing connection...', 'cws-core' ),
@@ -331,6 +333,15 @@ class CWS_Core_Admin {
                         <code><?php echo esc_url( home_url( '/' . $job_slug . '/22026695/' ) ); ?></code>
                         <br><br>
                         <code><?php echo esc_url( home_url( '/' . $job_slug . '/22026695/job-title-slug/' ) ); ?></code>
+                    </div>
+                    
+                    <div class="cws-core-admin-box">
+                        <h3><?php esc_html_e( 'Virtual CPT Testing', 'cws-core' ); ?></h3>
+                        <p><?php esc_html_e( 'Test the virtual CPT functionality to ensure everything is working correctly.', 'cws-core' ); ?></p>
+                        <button type="button" class="button button-secondary" id="cws-core-test-virtual-cpt">
+                            <?php esc_html_e( 'Test Virtual CPT', 'cws-core' ); ?>
+                        </button>
+                        <div id="cws-core-virtual-cpt-result"></div>
                     </div>
                 </div>
             </div>
@@ -615,5 +626,90 @@ class CWS_Core_Admin {
         wp_send_json_success( array(
             'message' => __( 'Rewrite rules flushed successfully! Job URLs should now work correctly.', 'cws-core' ),
         ) );
+    }
+
+    /**
+     * Test virtual CPT functionality via AJAX
+     */
+    public function test_virtual_cpt_ajax() {
+        // Verify nonce
+        if ( ! wp_verify_nonce( $_POST['nonce'], 'cws_core_test_virtual_cpt' ) ) {
+            wp_die( 'Security check failed' );
+        }
+
+        // Check permissions
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die( 'Insufficient permissions' );
+        }
+
+        $results = array();
+
+        // Test 1: Check if virtual CPT class exists
+        if ( $this->plugin->virtual_cpt ) {
+            $results['virtual_cpt_class'] = 'success';
+        } else {
+            $results['virtual_cpt_class'] = 'error';
+        }
+
+        // Test 2: Check if post type is registered
+        $post_types = get_post_types( array(), 'names' );
+        if ( in_array( 'cws_job', $post_types ) ) {
+            $results['post_type_registered'] = 'success';
+        } else {
+            $results['post_type_registered'] = 'error';
+        }
+
+        // Test 3: Test virtual post creation
+        $test_job_id = '16873230'; // Use the job ID that's working
+        $virtual_post = $this->plugin->virtual_cpt->create_virtual_job_post( $test_job_id );
+        
+        if ( $virtual_post ) {
+            $results['virtual_post_creation'] = 'success';
+            $results['virtual_post_data'] = array(
+                'id' => $virtual_post->ID,
+                'post_type' => $virtual_post->post_type,
+                'title' => $virtual_post->post_title,
+                'job_id' => $virtual_post->cws_job_id,
+                'company' => $virtual_post->cws_job_company,
+                'location' => $virtual_post->cws_job_location,
+            );
+        } else {
+            $results['virtual_post_creation'] = 'error';
+        }
+
+        // Test 4: Check API connection
+        if ( $this->plugin->api ) {
+            $job_data = $this->plugin->api->get_job( $test_job_id );
+            if ( $job_data ) {
+                $results['api_connection'] = 'success';
+                $results['api_data_keys'] = array_keys( $job_data );
+            } else {
+                $results['api_connection'] = 'error';
+            }
+        } else {
+            $results['api_connection'] = 'error';
+        }
+
+        // Test 5: Check cache functionality
+        if ( $this->plugin->cache ) {
+            $results['cache_available'] = 'success';
+            
+            // Test cache set/get
+            $test_key = 'test_virtual_cpt_ajax';
+            $test_data = array( 'test' => 'data' );
+            $this->plugin->cache->set( $test_key, $test_data, 60 );
+            $cached_data = $this->plugin->cache->get( $test_key );
+            
+            if ( $cached_data && $cached_data['test'] === 'data' ) {
+                $results['cache_functionality'] = 'success';
+            } else {
+                $results['cache_functionality'] = 'error';
+            }
+        } else {
+            $results['cache_available'] = 'error';
+            $results['cache_functionality'] = 'error';
+        }
+
+        wp_send_json_success( $results );
     }
 }
