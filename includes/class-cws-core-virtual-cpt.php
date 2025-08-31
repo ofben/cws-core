@@ -178,6 +178,12 @@ class CWS_Core_Virtual_CPT {
             }
         }
         
+        // Add schema post to the results if it exists
+        $schema_post = $this->get_schema_post();
+        if ( $schema_post ) {
+            $virtual_posts[] = $schema_post;
+        }
+        
         return $virtual_posts;
     }
 
@@ -1240,5 +1246,48 @@ class CWS_Core_Virtual_CPT {
         }
 
         echo '</div>';
+    }
+
+    /**
+     * Get the schema post for reference
+     *
+     * @return \WP_Post|null
+     */
+    private function get_schema_post() {
+        $schema_posts = get_posts([
+            'post_type' => 'cws_job',
+            'post_status' => 'draft',
+            'meta_query' => [
+                [
+                    'key' => '_cws_schema_post',
+                    'value' => '1',
+                    'compare' => '='
+                ]
+            ],
+            'posts_per_page' => 1
+        ]);
+
+        if (!empty($schema_posts)) {
+            $schema_post = $schema_posts[0];
+            
+            // Add meta data to the schema post for consistency
+            $meta_fields = [
+                'cws_job_id', 'cws_job_company', 'cws_job_location', 'cws_job_salary',
+                'cws_job_department', 'cws_job_category', 'cws_job_status', 'cws_job_type',
+                'cws_job_url', 'cws_job_seo_url', 'cws_job_open_date', 'cws_job_update_date',
+                'cws_job_industry', 'cws_job_function'
+            ];
+            
+            $schema_post->meta_data = [];
+            foreach ($meta_fields as $field) {
+                $value = get_post_meta($schema_post->ID, $field, true);
+                $schema_post->meta_data[$field] = $value;
+                $schema_post->$field = $value; // Also add as direct properties
+            }
+            
+            return $schema_post;
+        }
+        
+        return null;
     }
 }
