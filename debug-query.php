@@ -164,6 +164,38 @@ if ($query->have_posts()) {
             echo "</div>\n";
         }
         
+        // Show raw JSON for EtchWP compatibility
+        echo "<div class='meta-data'>\n";
+        echo "<h4>Raw JSON for EtchWP:</h4>\n";
+        $json_data = [
+            'id' => $post->ID,
+            'title' => $post->post_title,
+            'slug' => $post->post_name,
+            'content' => $post->post_content,
+            'excerpt' => $post->post_excerpt,
+            'date' => $post->post_date,
+            'status' => $post->post_status,
+            'type' => $post->post_type,
+            'meta' => $all_meta ?? [],
+            'meta_data' => isset($post->meta_data) ? $post->meta_data : [],
+            'individual_meta' => []
+        ];
+        
+        // Add individual meta properties
+        $meta_properties = [
+            'cws_job_id', 'cws_job_company', 'cws_job_location', 'cws_job_salary',
+            'cws_job_department', 'cws_job_category', 'cws_job_status', 'cws_job_type',
+            'cws_job_url', 'cws_job_seo_url', 'cws_job_open_date', 'cws_job_update_date',
+            'cws_job_industry', 'cws_job_function'
+        ];
+        
+        foreach ($meta_properties as $prop) {
+            $json_data['individual_meta'][$prop] = isset($post->$prop) ? $post->$prop : null;
+        }
+        
+        echo "<pre>" . json_encode($json_data, JSON_PRETTY_PRINT) . "</pre>\n";
+        echo "</div>\n";
+        
         echo "</div>\n";
     }
     

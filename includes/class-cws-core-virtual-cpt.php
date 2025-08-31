@@ -97,6 +97,9 @@ class CWS_Core_Virtual_CPT {
         
         // Register fields in a way that EtchWP might recognize
         add_action( 'init', array( $this, 'register_etchwp_compatible_fields' ) );
+        
+        // Add admin menu for the CPT
+        add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
     }
 
     /**
@@ -1102,5 +1105,96 @@ class CWS_Core_Virtual_CPT {
                 'description' => 'CWS Job ' . $field_name,
             ) );
         }
+    }
+
+    /**
+     * Add admin menu for the CPT
+     */
+    public function add_admin_menu(): void {
+        add_menu_page(
+            'CWS Jobs',
+            'CWS Jobs',
+            'manage_options',
+            'cws-jobs',
+            array( $this, 'admin_page' ),
+            'dashicons-businessman',
+            30
+        );
+    }
+
+    /**
+     * Admin page content
+     */
+    public function admin_page(): void {
+        echo '<div class="wrap">';
+        echo '<h1>CWS Jobs Management</h1>';
+        
+        // Show schema post status
+        $schema_post = get_posts([
+            'post_type' => 'cws_job',
+            'post_status' => 'draft',
+            'meta_query' => [
+                [
+                    'key' => '_cws_schema_post',
+                    'value' => '1',
+                    'compare' => '='
+                ]
+            ],
+            'posts_per_page' => 1
+        ]);
+
+        if (!empty($schema_post)) {
+            echo '<div class="notice notice-success"><p>✓ Schema post exists (ID: ' . $schema_post[0]->ID . ')</p></div>';
+            
+            // Show schema post meta
+            echo '<h2>Schema Post Meta Fields:</h2>';
+            echo '<table class="wp-list-table widefat fixed striped">';
+            echo '<thead><tr><th>Meta Key</th><th>Value</th></tr></thead>';
+            echo '<tbody>';
+            
+            $meta_fields = [
+                'cws_job_id', 'cws_job_company', 'cws_job_location', 'cws_job_salary',
+                'cws_job_department', 'cws_job_category', 'cws_job_status', 'cws_job_type',
+                'cws_job_url', 'cws_job_seo_url', 'cws_job_open_date', 'cws_job_update_date',
+                'cws_job_industry', 'cws_job_function'
+            ];
+            
+            foreach ($meta_fields as $field) {
+                $value = get_post_meta($schema_post[0]->ID, $field, true);
+                echo '<tr><td><code>' . $field . '</code></td><td>' . esc_html($value) . '</td></tr>';
+            }
+            
+            echo '</tbody></table>';
+        } else {
+            echo '<div class="notice notice-error"><p>✗ Schema post not found. <button onclick="location.reload()">Refresh</button></p></div>';
+        }
+
+        // Show virtual posts
+        echo '<h2>Virtual Posts (from API):</h2>';
+        $job_ids = $this->core->get_available_job_ids();
+        if (!empty($job_ids)) {
+            echo '<table class="wp-list-table widefat fixed striped">';
+            echo '<thead><tr><th>Job ID</th><th>Title</th><th>Company</th><th>Location</th></tr></thead>';
+            echo '<tbody>';
+            
+            foreach (array_slice($job_ids, 0, 10) as $job_id) {
+                $virtual_post = $this->create_virtual_job_post($job_id);
+                if ($virtual_post) {
+                    echo '<tr>';
+                    echo '<td>' . esc_html($job_id) . '</td>';
+                    echo '<td>' . esc_html($virtual_post->post_title) . '</td>';
+                    echo '<td>' . esc_html($virtual_post->cws_job_company ?? 'N/A') . '</td>';
+                    echo '<td>' . esc_html($virtual_post->cws_job_location ?? 'N/A') . '</td>';
+                    echo '</tr>';
+                }
+            }
+            
+            echo '</tbody></table>';
+            echo '<p><em>Showing first 10 jobs. Total: ' . count($job_ids) . '</em></p>';
+        } else {
+            echo '<p>No virtual posts found.</p>';
+        }
+
+        echo '</div>';
     }
 }
