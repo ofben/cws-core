@@ -39,6 +39,7 @@ require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-api.php';
 require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-cache.php';
 require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-admin.php';
 require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-public.php';
+require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-virtual-cpt.php';
 
 // Initialize the plugin
 function cws_core_init() {

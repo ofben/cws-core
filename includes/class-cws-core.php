@@ -48,6 +48,13 @@ class CWS_Core {
     public $public = null;
 
     /**
+     * Virtual CPT class instance
+     *
+     * @var CWS_Core_Virtual_CPT
+     */
+    public $virtual_cpt = null;
+
+    /**
      * Get plugin instance
      *
      * @return CWS_Core
@@ -94,6 +101,11 @@ class CWS_Core {
             if ( class_exists( 'CWS_Core\\CWS_Core_Public' ) ) {
                 $this->public = new CWS_Core_Public( $this );
             }
+
+            // Initialize virtual CPT class
+            if ( class_exists( 'CWS_Core\\CWS_Core_Virtual_CPT' ) ) {
+                $this->virtual_cpt = new CWS_Core_Virtual_CPT( $this );
+            }
         } catch ( Exception $e ) {
             // Log error but don't crash the plugin
             error_log( 'CWS Core Component Error: ' . $e->getMessage() );
@@ -132,6 +144,11 @@ class CWS_Core {
                 $admin_exists = $this->admin ? 'true' : 'false';
                 $method_exists = $this->admin ? (method_exists( $this->admin, 'init' ) ? 'true' : 'false') : 'false';
                 error_log( 'CWS Core: Admin init() not called. is_admin: ' . (is_admin() ? 'true' : 'false') . ', admin exists: ' . $admin_exists . ', method_exists: ' . $method_exists );
+            }
+
+            // Initialize virtual CPT
+            if ( $this->virtual_cpt && method_exists( $this->virtual_cpt, 'init' ) ) {
+                $this->virtual_cpt->init();
             }
         } catch ( Exception $e ) {
             // Log error but don't crash the plugin
