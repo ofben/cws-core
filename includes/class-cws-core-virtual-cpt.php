@@ -94,6 +94,9 @@ class CWS_Core_Virtual_CPT {
         
         // Add a custom REST API endpoint for EtchWP
         add_action( 'rest_api_init', array( $this, 'register_etchwp_endpoint' ) );
+        
+        // Register fields in a way that EtchWP might recognize
+        add_action( 'init', array( $this, 'register_etchwp_compatible_fields' ) );
     }
 
     /**
@@ -362,104 +365,136 @@ class CWS_Core_Virtual_CPT {
      * Register meta fields for the cws_job post type
      */
     public function register_meta_fields(): void {
-        // Register meta fields for REST API access and standard queries
-        register_post_meta( 'cws_job', 'cws_job_id', array(
-            'type' => 'string',
-            'single' => true,
-            'show_in_rest' => true,
-            'auth_callback' => '__return_true',
-        ) );
+        // Method 1: Register meta fields like ACF does - with object_type and additional properties
+        $meta_fields = [
+            'cws_job_id' => 'string',
+            'cws_job_company' => 'string',
+            'cws_job_location' => 'string',
+            'cws_job_salary' => 'string',
+            'cws_job_department' => 'string',
+            'cws_job_category' => 'string',
+            'cws_job_status' => 'string',
+            'cws_job_type' => 'string',
+            'cws_job_url' => 'string',
+            'cws_job_seo_url' => 'string',
+            'cws_job_open_date' => 'string',
+            'cws_job_update_date' => 'string',
+            'cws_job_industry' => 'string',
+            'cws_job_function' => 'string',
+        ];
+
+        foreach ($meta_fields as $field_name => $field_type) {
+            // Method 1: Standard WordPress registration with additional properties
+            register_post_meta( 'cws_job', $field_name, array(
+                'type' => $field_type,
+                'single' => true,
+                'show_in_rest' => true,
+                'auth_callback' => '__return_true',
+                'object_subtype' => 'cws_job',
+                'description' => 'CWS Job ' . str_replace('cws_job_', '', $field_name),
+                'default' => '',
+            ) );
+        }
+
+        // Method 2: Register as ACF-compatible fields
+        $this->register_acf_compatible_fields();
         
-        register_post_meta( 'cws_job', 'cws_job_company', array(
-            'type' => 'string',
-            'single' => true,
-            'show_in_rest' => true,
-            'auth_callback' => '__return_true',
-        ) );
-        
-        register_post_meta( 'cws_job', 'cws_job_location', array(
-            'type' => 'string',
-            'single' => true,
-            'show_in_rest' => true,
-            'auth_callback' => '__return_true',
-        ) );
-        
-        register_post_meta( 'cws_job', 'cws_job_salary', array(
-            'type' => 'string',
-            'single' => true,
-            'show_in_rest' => true,
-            'auth_callback' => '__return_true',
-        ) );
-        
-        register_post_meta( 'cws_job', 'cws_job_department', array(
-            'type' => 'string',
-            'single' => true,
-            'show_in_rest' => true,
-            'auth_callback' => '__return_true',
-        ) );
-        
-        register_post_meta( 'cws_job', 'cws_job_category', array(
-            'type' => 'string',
-            'single' => true,
-            'show_in_rest' => true,
-            'auth_callback' => '__return_true',
-        ) );
-        
-        register_post_meta( 'cws_job', 'cws_job_status', array(
-            'type' => 'string',
-            'single' => true,
-            'show_in_rest' => true,
-            'auth_callback' => '__return_true',
-        ) );
-        
-        register_post_meta( 'cws_job', 'cws_job_type', array(
-            'type' => 'string',
-            'single' => true,
-            'show_in_rest' => true,
-            'auth_callback' => '__return_true',
-        ) );
-        
-        register_post_meta( 'cws_job', 'cws_job_url', array(
-            'type' => 'string',
-            'single' => true,
-            'show_in_rest' => true,
-            'auth_callback' => '__return_true',
-        ) );
-        
-        register_post_meta( 'cws_job', 'cws_job_seo_url', array(
-            'type' => 'string',
-            'single' => true,
-            'show_in_rest' => true,
-            'auth_callback' => '__return_true',
-        ) );
-        
-        register_post_meta( 'cws_job', 'cws_job_open_date', array(
-            'type' => 'string',
-            'single' => true,
-            'show_in_rest' => true,
-            'auth_callback' => '__return_true',
-        ) );
-        
-        register_post_meta( 'cws_job', 'cws_job_update_date', array(
-            'type' => 'string',
-            'single' => true,
-            'show_in_rest' => true,
-            'auth_callback' => '__return_true',
-        ) );
-        
-        register_post_meta( 'cws_job', 'cws_job_industry', array(
-            'type' => 'string',
-            'single' => true,
-            'show_in_rest' => true,
-            'auth_callback' => '__return_true',
-        ) );
-        
-        register_post_meta( 'cws_job', 'cws_job_function', array(
-            'type' => 'string',
-            'single' => true,
-            'show_in_rest' => true,
-            'auth_callback' => '__return_true',
-        ) );
+        // Method 3: Create a real post to establish the schema
+        $this->create_schema_post();
+    }
+
+    /**
+     * Register fields in ACF-compatible format
+     */
+    private function register_acf_compatible_fields(): void {
+        // Register fields that ACF would recognize
+        $acf_fields = [
+            'field_cws_job_id' => 'cws_job_id',
+            'field_cws_job_company' => 'cws_job_company',
+            'field_cws_job_location' => 'cws_job_location',
+            'field_cws_job_salary' => 'cws_job_salary',
+            'field_cws_job_department' => 'cws_job_department',
+            'field_cws_job_category' => 'cws_job_category',
+            'field_cws_job_status' => 'cws_job_status',
+            'field_cws_job_type' => 'cws_job_type',
+            'field_cws_job_url' => 'cws_job_url',
+            'field_cws_job_seo_url' => 'cws_job_seo_url',
+            'field_cws_job_open_date' => 'cws_job_open_date',
+            'field_cws_job_update_date' => 'cws_job_update_date',
+            'field_cws_job_industry' => 'cws_job_industry',
+            'field_cws_job_function' => 'cws_job_function',
+        ];
+
+        foreach ($acf_fields as $acf_field_name => $meta_key) {
+            register_post_meta( 'cws_job', $acf_field_name, array(
+                'type' => 'string',
+                'single' => true,
+                'show_in_rest' => true,
+                'auth_callback' => '__return_true',
+                'object_subtype' => 'cws_job',
+            ) );
+        }
+    }
+
+    /**
+     * Create a real post to establish the schema for EtchWP
+     */
+    private function create_schema_post(): void {
+        // Check if schema post already exists
+        $schema_post = get_posts([
+            'post_type' => 'cws_job',
+            'post_status' => 'draft',
+            'meta_query' => [
+                [
+                    'key' => '_cws_schema_post',
+                    'value' => '1',
+                    'compare' => '='
+                ]
+            ],
+            'posts_per_page' => 1
+        ]);
+
+        if (empty($schema_post)) {
+            // Create a schema post with all the meta fields
+            $post_data = [
+                'post_title' => 'CWS Job Schema Template',
+                'post_content' => 'This post establishes the schema for CWS Job meta fields.',
+                'post_status' => 'draft',
+                'post_type' => 'cws_job',
+                'post_name' => 'cws-job-schema-template'
+            ];
+
+            $post_id = wp_insert_post($post_data);
+
+            if ($post_id && !is_wp_error($post_id)) {
+                // Add all the meta fields to establish the schema
+                $meta_fields = [
+                    'cws_job_id' => '16873230',
+                    'cws_job_company' => 'NYU Langone Medical Center',
+                    'cws_job_location' => 'New York, NY',
+                    'cws_job_salary' => '$260k-$280k',
+                    'cws_job_department' => 'Emergency Medicine',
+                    'cws_job_category' => 'Faculty',
+                    'cws_job_status' => 'Open',
+                    'cws_job_type' => 'Full-time',
+                    'cws_job_url' => 'https://example.com/job/16873230',
+                    'cws_job_seo_url' => 'https://apply.interfolio.com/168481',
+                    'cws_job_open_date' => '2025-05-29T14:04:33.73Z',
+                    'cws_job_update_date' => '2025-05-29T14:04:36.87Z',
+                    'cws_job_industry' => 'Health Care General',
+                    'cws_job_function' => 'Education General',
+                ];
+
+                foreach ($meta_fields as $key => $value) {
+                    update_post_meta($post_id, $key, $value);
+                }
+
+                // Mark this as a schema post
+                update_post_meta($post_id, '_cws_schema_post', '1');
+
+                $this->log_debug('Schema post created with ID: ' . $post_id);
+            }
+        }
     }
 
     /**
@@ -1009,5 +1044,63 @@ class CWS_Core_Virtual_CPT {
         }
         
         return new \WP_REST_Response( array(), 404 );
+    }
+
+    /**
+     * Register fields in a way that EtchWP might recognize better
+     */
+    public function register_etchwp_compatible_fields(): void {
+        // Register fields without the cws_job_ prefix for EtchWP compatibility
+        $etchwp_fields = [
+            'job_id' => 'cws_job_id',
+            'job_company' => 'cws_job_company',
+            'job_location' => 'cws_job_location',
+            'job_salary' => 'cws_job_salary',
+            'job_department' => 'cws_job_department',
+            'job_category' => 'cws_job_category',
+            'job_status' => 'cws_job_status',
+            'job_type' => 'cws_job_type',
+            'job_url' => 'cws_job_url',
+            'job_seo_url' => 'cws_job_seo_url',
+            'job_open_date' => 'cws_job_open_date',
+            'job_update_date' => 'cws_job_update_date',
+            'job_industry' => 'cws_job_industry',
+            'job_function' => 'cws_job_function',
+        ];
+
+        foreach ($etchwp_fields as $field_name => $meta_key) {
+            register_post_meta( 'cws_job', $field_name, array(
+                'type' => 'string',
+                'single' => true,
+                'show_in_rest' => true,
+                'auth_callback' => '__return_true',
+                'object_subtype' => 'cws_job',
+                'description' => 'CWS Job ' . str_replace('job_', '', $field_name),
+            ) );
+        }
+
+        // Also register with common field names that EtchWP might expect
+        $common_fields = [
+            'company' => 'cws_job_company',
+            'location' => 'cws_job_location',
+            'salary' => 'cws_job_salary',
+            'department' => 'cws_job_department',
+            'category' => 'cws_job_category',
+            'status' => 'cws_job_status',
+            'type' => 'cws_job_type',
+            'url' => 'cws_job_url',
+            'industry' => 'cws_job_industry',
+        ];
+
+        foreach ($common_fields as $field_name => $meta_key) {
+            register_post_meta( 'cws_job', $field_name, array(
+                'type' => 'string',
+                'single' => true,
+                'show_in_rest' => true,
+                'auth_callback' => '__return_true',
+                'object_subtype' => 'cws_job',
+                'description' => 'CWS Job ' . $field_name,
+            ) );
+        }
     }
 }
