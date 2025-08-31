@@ -443,6 +443,8 @@ class CWS_Core_Virtual_CPT {
      * Create a real post to establish the schema for EtchWP
      */
     private function create_schema_post(): void {
+        $this->log_debug('create_schema_post() called');
+        
         // Check if schema post already exists
         $schema_post = get_posts([
             'post_type' => 'cws_job',
@@ -458,6 +460,8 @@ class CWS_Core_Virtual_CPT {
         ]);
 
         if (empty($schema_post)) {
+            $this->log_debug('No existing schema post found, creating new one');
+            
             // Create a schema post with all the meta fields
             $post_data = [
                 'post_title' => 'CWS Job Schema Template',
@@ -470,6 +474,8 @@ class CWS_Core_Virtual_CPT {
             $post_id = wp_insert_post($post_data);
 
             if ($post_id && !is_wp_error($post_id)) {
+                $this->log_debug('Schema post created successfully with ID: ' . $post_id);
+                
                 // Add all the meta fields to establish the schema
                 $meta_fields = [
                     'cws_job_id' => '16873230',
@@ -489,14 +495,19 @@ class CWS_Core_Virtual_CPT {
                 ];
 
                 foreach ($meta_fields as $key => $value) {
-                    update_post_meta($post_id, $key, $value);
+                    $result = update_post_meta($post_id, $key, $value);
+                    $this->log_debug('Added meta field ' . $key . ' = ' . $value . ' (result: ' . ($result ? 'success' : 'failed') . ')');
                 }
 
                 // Mark this as a schema post
                 update_post_meta($post_id, '_cws_schema_post', '1');
 
-                $this->log_debug('Schema post created with ID: ' . $post_id);
+                $this->log_debug('Schema post creation completed successfully');
+            } else {
+                $this->log_debug('Failed to create schema post: ' . (is_wp_error($post_id) ? $post_id->get_error_message() : 'Unknown error'));
             }
+        } else {
+            $this->log_debug('Schema post already exists with ID: ' . $schema_post[0]->ID);
         }
     }
 
@@ -1166,7 +1177,40 @@ class CWS_Core_Virtual_CPT {
             
             echo '</tbody></table>';
         } else {
-            echo '<div class="notice notice-error"><p>✗ Schema post not found. <button onclick="location.reload()">Refresh</button></p></div>';
+            echo '<div class="notice notice-error"><p>✗ Schema post not found.</p></div>';
+            
+            // Add manual creation button
+            if (isset($_GET['create_schema']) && $_GET['create_schema'] === '1') {
+                echo '<div class="notice notice-info"><p>Creating schema post...</p></div>';
+                $this->create_schema_post();
+                
+                // Redirect to remove the parameter
+                echo '<script>window.location.href = "' . admin_url('admin.php?page=cws-jobs') . '";</script>';
+                return;
+            }
+            
+            echo '<p><a href="' . admin_url('admin.php?page=cws-jobs&create_schema=1') . '" class="button button-primary">Create Schema Post</a></p>';
+            
+            // Show registered meta fields
+            echo '<h2>Registered Meta Fields:</h2>';
+            echo '<table class="wp-list-table widefat fixed striped">';
+            echo '<thead><tr><th>Field Name</th><th>Type</th><th>Status</th></tr></thead>';
+            echo '<tbody>';
+            
+            $meta_fields = [
+                'cws_job_id', 'cws_job_company', 'cws_job_location', 'cws_job_salary',
+                'cws_job_department', 'cws_job_category', 'cws_job_status', 'cws_job_type',
+                'cws_job_url', 'cws_job_seo_url', 'cws_job_open_date', 'cws_job_update_date',
+                'cws_job_industry', 'cws_job_function'
+            ];
+            
+            foreach ($meta_fields as $field) {
+                $registered = get_registered_meta_keys('post', 'cws_job');
+                $status = isset($registered[$field]) ? '✓ Registered' : '✗ Not Registered';
+                echo '<tr><td><code>' . $field . '</code></td><td>string</td><td>' . $status . '</td></tr>';
+            }
+            
+            echo '</tbody></table>';
         }
 
         // Show virtual posts
