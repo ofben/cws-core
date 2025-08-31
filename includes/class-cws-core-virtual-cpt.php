@@ -76,6 +76,15 @@ class CWS_Core_Virtual_CPT {
         
         // Hook into get_post_meta function directly
         add_filter( 'get_post_meta', array( $this, 'get_virtual_post_meta_direct' ), 10, 4 );
+        
+        // Hook into WP_Query to intercept all queries
+        add_action( 'pre_get_posts', array( $this, 'intercept_wp_query' ), 10, 1 );
+        
+        // Hook into the main query to see what's happening
+        add_action( 'wp', array( $this, 'debug_main_query' ), 10 );
+        
+        // Add a custom function for getting virtual post meta
+        add_action( 'init', array( $this, 'add_custom_functions' ) );
     }
 
     /**
@@ -503,7 +512,41 @@ class CWS_Core_Virtual_CPT {
             }
         }
         
-        return false;
+        return null;
+    }
+
+    /**
+     * Add custom functions for getting virtual post meta
+     */
+    public function add_custom_functions() {
+        // Add a global function for getting virtual post meta
+        if ( ! function_exists( 'get_virtual_post_meta' ) ) {
+            function get_virtual_post_meta( $post_id, $key = '', $single = true ) {
+                global $cws_core;
+                
+                if ( $cws_core && $cws_core->virtual_cpt ) {
+                    return $cws_core->virtual_cpt->get_virtual_post_meta( null, $post_id, $key, $single );
+                }
+                
+                return false;
+            }
+        }
+        
+        // Add a global function for getting all virtual post meta
+        if ( ! function_exists( 'get_virtual_post_meta_all' ) ) {
+            function get_virtual_post_meta_all( $post_id ) {
+                global $cws_core;
+                
+                if ( $cws_core && $cws_core->virtual_cpt ) {
+                    $virtual_post = $cws_core->virtual_cpt->get_virtual_post_by_id( $post_id );
+                    if ( $virtual_post && isset( $virtual_post->meta_data ) ) {
+                        return $virtual_post->meta_data;
+                    }
+                }
+                
+                return array();
+            }
+        }
     }
 
     /**
@@ -854,5 +897,34 @@ class CWS_Core_Virtual_CPT {
         }
         
         return $value;
+    }
+
+    /**
+     * Intercept WP_Query to debug what's happening
+     *
+     * @param \WP_Query $query The query object.
+     */
+    public function intercept_wp_query( $query ) {
+        // Only log cws_job queries
+        if ( $query->get( 'post_type' ) === 'cws_job' ) {
+            $this->log_debug( 'WP_Query intercepted for cws_job: ' . print_r( $query->query_vars, true ) );
+        }
+    }
+
+    /**
+     * Debug the main query
+     */
+    public function debug_main_query() {
+        global $wp_query;
+        
+        if ( $wp_query && $wp_query->get( 'post_type' ) === 'cws_job' ) {
+            $this->log_debug( 'Main query debug - post_type: cws_job, found_posts: ' . $wp_query->found_posts );
+            
+            if ( $wp_query->posts ) {
+                foreach ( $wp_query->posts as $post ) {
+                    $this->log_debug( 'Post in main query: ID=' . $post->ID . ', title=' . $post->post_title . ', has_meta_data=' . ( isset( $post->meta_data ) ? 'yes' : 'no' ) );
+                }
+            }
+        }
     }
 }
