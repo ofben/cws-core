@@ -60,8 +60,7 @@ class CWS_Core_Virtual_CPT {
         add_filter( 'posts_clauses', array( $this, 'modify_posts_clauses' ), 10, 2 );
         add_filter( 'posts_where', array( $this, 'modify_posts_where' ), 10, 2 );
         
-        // Hook into the final query results
-        add_filter( 'posts_selection', array( $this, 'modify_posts_selection' ), 10, 2 );
+        // Note: posts_selection filter removed as it only receives SQL string, not query object
         
         // Hook into get_post to ensure meta data is always available
         add_filter( 'get_post', array( $this, 'add_meta_to_post' ), 10, 2 );
@@ -736,22 +735,7 @@ class CWS_Core_Virtual_CPT {
         return $where;
     }
 
-    /**
-     * Modify posts selection
-     *
-     * @param string   $posts Posts string.
-     * @param \WP_Query $query The query object.
-     * @return string
-     */
-    public function modify_posts_selection( $posts, $query ) {
-        // Only process cws_job queries
-        if ( $query->get( 'post_type' ) !== 'cws_job' ) {
-            return $posts;
-        }
 
-        $this->log_debug( 'modify_posts_selection called for cws_job query' );
-        return $posts;
-    }
 
     /**
      * Add meta data to post when retrieved
