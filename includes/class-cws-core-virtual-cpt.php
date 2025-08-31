@@ -293,6 +293,17 @@ class CWS_Core_Virtual_CPT {
         $post->post_mime_type = '';
         $post->filter = 'raw';
         
+        // Add properties that WordPress expects for proper template handling
+        $post->post_type_obj = get_post_type_object( 'cws_job' );
+        $post->ancestors = array();
+        $post->page_template = '';
+        $post->post_content_filtered = '';
+        $post->post_excerpt = '';
+        $post->post_password = '';
+        $post->post_parent = 0;
+        $post->post_status = 'publish';
+        $post->post_type = 'cws_job';
+        
         // Store meta data in WordPress meta system for standard queries
         $meta_data = array(
             'cws_job_id' => sanitize_text_field( $job_id ),
@@ -1412,6 +1423,10 @@ class CWS_Core_Virtual_CPT {
                 $wp_query->post_count = 1;
                 $wp_query->found_posts = 1;
                 $wp_query->max_num_pages = 1;
+                
+                // Set the queried object for proper template handling
+                $wp_query->queried_object = $virtual_post;
+                $wp_query->queried_object_id = $virtual_post->ID;
                 
                 // Set up the main query vars
                 $wp_query->query_vars['post_type'] = 'cws_job';
