@@ -107,7 +107,10 @@ class CWS_Core_Virtual_CPT {
         // Add rewrite rules for job URLs
         add_action( 'init', array( $this, 'add_job_rewrite_rules' ) );
         add_filter( 'query_vars', array( $this, 'add_job_query_vars' ) );
-        add_action( 'template_redirect', array( $this, 'handle_job_template' ) );
+        add_action( 'wp', array( $this, 'handle_job_template' ) );
+        
+        // Handle shortlinks for virtual posts
+        add_filter( 'pre_get_shortlink', array( $this, 'handle_virtual_post_shortlink' ), 10, 2 );
     }
 
     /**
@@ -1447,5 +1450,24 @@ class CWS_Core_Virtual_CPT {
                 status_header( 404 );
             }
         }
+    }
+    
+    /**
+     * Handle shortlinks for virtual posts
+     *
+     * @param string|false $shortlink The shortlink.
+     * @param int $id The post ID.
+     * @return string|false
+     */
+    public function handle_virtual_post_shortlink( $shortlink, $id ) {
+        // Check if this is a virtual post request
+        $job_id = get_query_var( 'cws_job_id' );
+        
+        if ( ! empty( $job_id ) ) {
+            // Return a shortlink for the virtual post
+            return home_url( '/job/' . $job_id . '/' );
+        }
+        
+        return $shortlink;
     }
 }
