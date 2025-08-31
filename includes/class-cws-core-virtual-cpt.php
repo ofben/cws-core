@@ -309,20 +309,44 @@ class CWS_Core_Virtual_CPT {
         
         // Store meta data in WordPress meta system for standard queries
         $meta_data = array(
+            // Basic job information
             'cws_job_id' => sanitize_text_field( $job_id ),
+            'cws_job_title' => sanitize_text_field( $formatted_job['title'] ),
             'cws_job_company' => sanitize_text_field( $formatted_job['company_name'] ),
+            'cws_job_company_name' => sanitize_text_field( $formatted_job['company_name'] ),
+            'cws_job_description' => wp_kses_post( $formatted_job['description'] ),
+            'cws_job_entity_status' => sanitize_text_field( $formatted_job['entity_status'] ),
+            
+            // Location information
             'cws_job_location' => sanitize_text_field( $formatted_job['primary_city'] . ', ' . $formatted_job['primary_state'] ),
-            'cws_job_salary' => sanitize_text_field( $formatted_job['salary'] ),
-            'cws_job_department' => sanitize_text_field( $formatted_job['department'] ),
+            'cws_job_primary_city' => sanitize_text_field( $formatted_job['primary_city'] ),
+            'cws_job_primary_state' => sanitize_text_field( $formatted_job['primary_state'] ),
+            'cws_job_primary_country' => sanitize_text_field( $formatted_job['primary_country'] ),
+            'cws_job_primary_location' => sanitize_text_field( $formatted_job['primary_location'] ),
+            
+            // Job classification
             'cws_job_category' => sanitize_text_field( $formatted_job['primary_category'] ),
-            'cws_job_status' => sanitize_text_field( $formatted_job['entity_status'] ),
-            'cws_job_type' => sanitize_text_field( $formatted_job['employment_type'] ),
-            'cws_job_url' => esc_url_raw( $formatted_job['url'] ),
-            'cws_job_seo_url' => esc_url_raw( $formatted_job['seo_url'] ),
-            'cws_job_open_date' => sanitize_text_field( $formatted_job['open_date'] ),
-            'cws_job_update_date' => sanitize_text_field( $formatted_job['update_date'] ),
+            'cws_job_primary_category' => sanitize_text_field( $formatted_job['primary_category'] ),
+            'cws_job_department' => sanitize_text_field( $formatted_job['department'] ),
             'cws_job_industry' => sanitize_text_field( $formatted_job['industry'] ),
             'cws_job_function' => sanitize_text_field( $formatted_job['function'] ),
+            
+            // Employment details
+            'cws_job_salary' => sanitize_text_field( $formatted_job['salary'] ),
+            'cws_job_employment_type' => sanitize_text_field( $formatted_job['employment_type'] ),
+            'cws_job_status' => sanitize_text_field( $formatted_job['entity_status'] ),
+            'cws_job_type' => sanitize_text_field( $formatted_job['employment_type'] ),
+            
+            // URLs and links
+            'cws_job_url' => esc_url_raw( $formatted_job['url'] ),
+            'cws_job_seo_url' => esc_url_raw( $formatted_job['seo_url'] ),
+            
+            // Dates
+            'cws_job_open_date' => sanitize_text_field( $formatted_job['open_date'] ),
+            'cws_job_update_date' => sanitize_text_field( $formatted_job['update_date'] ),
+            
+            // Additional fields
+            'cws_job_raw_data' => wp_json_encode( $formatted_job['raw_data'] ),
         );
         
         // Note: We can't use update_post_meta() for virtual posts (negative IDs)
@@ -398,20 +422,44 @@ class CWS_Core_Virtual_CPT {
     public function register_meta_fields(): void {
         // Method 1: Register meta fields like ACF does - with object_type and additional properties
         $meta_fields = [
+            // Basic job information
             'cws_job_id' => 'string',
+            'cws_job_title' => 'string',
             'cws_job_company' => 'string',
+            'cws_job_company_name' => 'string',
+            'cws_job_description' => 'string',
+            'cws_job_entity_status' => 'string',
+            
+            // Location information
             'cws_job_location' => 'string',
-            'cws_job_salary' => 'string',
-            'cws_job_department' => 'string',
+            'cws_job_primary_city' => 'string',
+            'cws_job_primary_state' => 'string',
+            'cws_job_primary_country' => 'string',
+            'cws_job_primary_location' => 'string',
+            
+            // Job classification
             'cws_job_category' => 'string',
-            'cws_job_status' => 'string',
-            'cws_job_type' => 'string',
-            'cws_job_url' => 'string',
-            'cws_job_seo_url' => 'string',
-            'cws_job_open_date' => 'string',
-            'cws_job_update_date' => 'string',
+            'cws_job_primary_category' => 'string',
+            'cws_job_department' => 'string',
             'cws_job_industry' => 'string',
             'cws_job_function' => 'string',
+            
+            // Employment details
+            'cws_job_salary' => 'string',
+            'cws_job_employment_type' => 'string',
+            'cws_job_status' => 'string',
+            'cws_job_type' => 'string',
+            
+            // URLs and links
+            'cws_job_url' => 'string',
+            'cws_job_seo_url' => 'string',
+            
+            // Dates
+            'cws_job_open_date' => 'string',
+            'cws_job_update_date' => 'string',
+            
+            // Additional fields
+            'cws_job_raw_data' => 'string',
         ];
 
         foreach ($meta_fields as $field_name => $field_type) {
@@ -440,20 +488,44 @@ class CWS_Core_Virtual_CPT {
     private function register_acf_compatible_fields(): void {
         // Register fields that ACF would recognize
         $acf_fields = [
+            // Basic job information
             'field_cws_job_id' => 'cws_job_id',
+            'field_cws_job_title' => 'cws_job_title',
             'field_cws_job_company' => 'cws_job_company',
+            'field_cws_job_company_name' => 'cws_job_company_name',
+            'field_cws_job_description' => 'cws_job_description',
+            'field_cws_job_entity_status' => 'cws_job_entity_status',
+            
+            // Location information
             'field_cws_job_location' => 'cws_job_location',
-            'field_cws_job_salary' => 'cws_job_salary',
-            'field_cws_job_department' => 'cws_job_department',
+            'field_cws_job_primary_city' => 'cws_job_primary_city',
+            'field_cws_job_primary_state' => 'cws_job_primary_state',
+            'field_cws_job_primary_country' => 'cws_job_primary_country',
+            'field_cws_job_primary_location' => 'cws_job_primary_location',
+            
+            // Job classification
             'field_cws_job_category' => 'cws_job_category',
-            'field_cws_job_status' => 'cws_job_status',
-            'field_cws_job_type' => 'cws_job_type',
-            'field_cws_job_url' => 'cws_job_url',
-            'field_cws_job_seo_url' => 'cws_job_seo_url',
-            'field_cws_job_open_date' => 'cws_job_open_date',
-            'field_cws_job_update_date' => 'cws_job_update_date',
+            'field_cws_job_primary_category' => 'cws_job_primary_category',
+            'field_cws_job_department' => 'cws_job_department',
             'field_cws_job_industry' => 'cws_job_industry',
             'field_cws_job_function' => 'cws_job_function',
+            
+            // Employment details
+            'field_cws_job_salary' => 'cws_job_salary',
+            'field_cws_job_employment_type' => 'cws_job_employment_type',
+            'field_cws_job_status' => 'cws_job_status',
+            'field_cws_job_type' => 'cws_job_type',
+            
+            // URLs and links
+            'field_cws_job_url' => 'cws_job_url',
+            'field_cws_job_seo_url' => 'cws_job_seo_url',
+            
+            // Dates
+            'field_cws_job_open_date' => 'cws_job_open_date',
+            'field_cws_job_update_date' => 'cws_job_update_date',
+            
+            // Additional fields
+            'field_cws_job_raw_data' => 'cws_job_raw_data',
         ];
 
         foreach ($acf_fields as $acf_field_name => $meta_key) {
