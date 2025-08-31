@@ -670,19 +670,20 @@ class CWS_Core_Virtual_CPT {
     public function add_meta_to_rest_response( $response, $post, $request ) {
         // Check if this is a virtual post (negative ID)
         if ( $post->ID < 0 && $post->post_type === 'cws_job' ) {
-            // Get the virtual post data
-            $job_id = get_post_meta( $post->ID, 'cws_job_id', true );
-            if ( ! $job_id ) {
-                // Try to extract job ID from post slug
-                $slug_parts = explode( '-', $post->post_name );
-                $job_id = end( $slug_parts );
-            }
+            // Extract job ID from post slug for virtual posts
+            $slug_parts = explode( '-', $post->post_name );
+            $job_id = end( $slug_parts );
             
-            if ( $job_id ) {
+            if ( $job_id && is_numeric( $job_id ) ) {
                 $virtual_post = $this->create_virtual_job_post( $job_id );
                 if ( $virtual_post && isset( $virtual_post->meta_data ) ) {
                     // Add meta data to the response
                     $response->data['meta'] = $virtual_post->meta_data;
+                    
+                    // Also add individual meta fields to the response for better compatibility
+                    foreach ( $virtual_post->meta_data as $key => $value ) {
+                        $response->data[ $key ] = $value;
+                    }
                 }
             }
         }
