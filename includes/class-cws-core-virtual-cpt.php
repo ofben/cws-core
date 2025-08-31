@@ -43,12 +43,18 @@ class CWS_Core_Virtual_CPT {
         // Override post meta for virtual posts
         add_action( 'init', array( $this, 'override_post_meta' ) );
         
+        // Add filter to ensure meta data is available in all contexts
+        add_filter( 'get_post_metadata', array( $this, 'get_virtual_post_meta' ), 10, 4 );
+        
         // Add filter for EtchWP to access meta data
         add_filter( 'rest_prepare_cws_job', array( $this, 'add_meta_to_rest_response' ), 10, 3 );
         
         // Hook into WordPress query results to add meta data
         add_filter( 'the_posts', array( $this, 'add_meta_to_query_results' ), 10, 2 );
         add_filter( 'posts_results', array( $this, 'add_meta_to_posts_results' ), 10, 2 );
+        
+        // Hook into the query preparation to ensure meta data is included
+        add_filter( 'posts_pre_query', array( $this, 'prepare_virtual_posts_query' ), 10, 2 );
     }
 
     /**
@@ -228,8 +234,8 @@ class CWS_Core_Virtual_CPT {
         $post->post_mime_type = '';
         $post->filter = 'raw';
         
-        // Store meta data in WordPress meta system for EtchWP access
-        $post->meta_data = array(
+        // Store meta data in WordPress meta system for standard queries
+        $meta_data = array(
             'cws_job_id' => sanitize_text_field( $job_id ),
             'cws_job_company' => sanitize_text_field( $formatted_job['company_name'] ),
             'cws_job_location' => sanitize_text_field( $formatted_job['primary_city'] . ', ' . $formatted_job['primary_state'] ),
@@ -245,6 +251,12 @@ class CWS_Core_Virtual_CPT {
             'cws_job_industry' => sanitize_text_field( $formatted_job['industry'] ),
             'cws_job_function' => sanitize_text_field( $formatted_job['function'] ),
         );
+        
+        // Note: We can't use update_post_meta() for virtual posts (negative IDs)
+        // Instead, we'll hook into the meta retrieval system
+        
+        // Also store as object properties for backward compatibility
+        $post->meta_data = $meta_data;
         
         // Also keep as object properties for backward compatibility
         $post->cws_job_id = sanitize_text_field( $job_id );
@@ -304,89 +316,103 @@ class CWS_Core_Virtual_CPT {
      * Register meta fields for the cws_job post type
      */
     public function register_meta_fields(): void {
-        // Register meta fields for REST API access
+        // Register meta fields for REST API access and standard queries
         register_post_meta( 'cws_job', 'cws_job_id', array(
             'type' => 'string',
             'single' => true,
             'show_in_rest' => true,
+            'auth_callback' => '__return_true',
         ) );
         
         register_post_meta( 'cws_job', 'cws_job_company', array(
             'type' => 'string',
             'single' => true,
             'show_in_rest' => true,
+            'auth_callback' => '__return_true',
         ) );
         
         register_post_meta( 'cws_job', 'cws_job_location', array(
             'type' => 'string',
             'single' => true,
             'show_in_rest' => true,
+            'auth_callback' => '__return_true',
         ) );
         
         register_post_meta( 'cws_job', 'cws_job_salary', array(
             'type' => 'string',
             'single' => true,
             'show_in_rest' => true,
+            'auth_callback' => '__return_true',
         ) );
         
         register_post_meta( 'cws_job', 'cws_job_department', array(
             'type' => 'string',
             'single' => true,
             'show_in_rest' => true,
+            'auth_callback' => '__return_true',
         ) );
         
         register_post_meta( 'cws_job', 'cws_job_category', array(
             'type' => 'string',
             'single' => true,
             'show_in_rest' => true,
+            'auth_callback' => '__return_true',
         ) );
         
         register_post_meta( 'cws_job', 'cws_job_status', array(
             'type' => 'string',
             'single' => true,
             'show_in_rest' => true,
+            'auth_callback' => '__return_true',
         ) );
         
         register_post_meta( 'cws_job', 'cws_job_type', array(
             'type' => 'string',
             'single' => true,
             'show_in_rest' => true,
+            'auth_callback' => '__return_true',
         ) );
         
         register_post_meta( 'cws_job', 'cws_job_url', array(
             'type' => 'string',
             'single' => true,
             'show_in_rest' => true,
+            'auth_callback' => '__return_true',
         ) );
         
         register_post_meta( 'cws_job', 'cws_job_seo_url', array(
             'type' => 'string',
             'single' => true,
             'show_in_rest' => true,
+            'auth_callback' => '__return_true',
         ) );
         
         register_post_meta( 'cws_job', 'cws_job_open_date', array(
             'type' => 'string',
             'single' => true,
             'show_in_rest' => true,
+            'auth_callback' => '__return_true',
         ) );
         
         register_post_meta( 'cws_job', 'cws_job_update_date', array(
             'type' => 'string',
             'single' => true,
             'show_in_rest' => true,
+            'auth_callback' => '__return_true',
         ) );
         
         register_post_meta( 'cws_job', 'cws_job_industry', array(
             'type' => 'string',
             'single' => true,
             'show_in_rest' => true,
+            'auth_callback' => '__return_true',
         ) );
         
         register_post_meta( 'cws_job', 'cws_job_function', array(
             'type' => 'string',
             'single' => true,
             'show_in_rest' => true,
+            'auth_callback' => '__return_true',
         ) );
     }
 
@@ -402,22 +428,54 @@ class CWS_Core_Virtual_CPT {
     public function get_virtual_post_meta( $value, int $post_id, string $key, bool $single ) {
         global $post;
         
+        // Handle both global $post and specific post_id
+        $current_post = $post;
+        if ( $post_id < 0 ) {
+            // If we have a specific post_id, we need to find the corresponding post
+            // This is tricky with virtual posts, so we'll use a different approach
+            $current_post = $this->get_virtual_post_by_id( $post_id );
+        }
+        
         // Only handle virtual posts (negative IDs)
-        if ( $post && $post->ID < 0 && $post->post_type === 'cws_job' ) {
+        if ( $current_post && $current_post->ID < 0 && $current_post->post_type === 'cws_job' ) {
             // First check meta_data array (for EtchWP compatibility)
-            if ( isset( $post->meta_data ) && is_array( $post->meta_data ) && isset( $post->meta_data[ $key ] ) ) {
-                return $single ? $post->meta_data[ $key ] : array( $post->meta_data[ $key ] );
+            if ( isset( $current_post->meta_data ) && is_array( $current_post->meta_data ) && isset( $current_post->meta_data[ $key ] ) ) {
+                return $single ? $current_post->meta_data[ $key ] : array( $current_post->meta_data[ $key ] );
             }
             
             // Fallback to object properties
             $meta_key = 'cws_job_' . str_replace( 'cws_job_', '', $key );
             
-            if ( isset( $post->$meta_key ) ) {
-                return $single ? $post->$meta_key : array( $post->$meta_key );
+            if ( isset( $current_post->$meta_key ) ) {
+                return $single ? $current_post->$meta_key : array( $current_post->$meta_key );
             }
         }
         
         return $value;
+    }
+
+    /**
+     * Get virtual post by ID
+     *
+     * @param int $post_id Post ID.
+     * @return \stdClass|false
+     */
+    private function get_virtual_post_by_id( int $post_id ) {
+        // For virtual posts, we need to extract the job ID and recreate the post
+        // This is a fallback method for when we don't have the global $post
+        if ( $post_id < 0 ) {
+            // Try to get the post from the current query
+            global $wp_query;
+            if ( $wp_query && $wp_query->posts ) {
+                foreach ( $wp_query->posts as $post ) {
+                    if ( $post->ID === $post_id ) {
+                        return $post;
+                    }
+                }
+            }
+        }
+        
+        return false;
     }
 
     /**
@@ -578,6 +636,46 @@ class CWS_Core_Virtual_CPT {
                     }
                 } else {
                     $this->log_error( 'Invalid job ID extracted: ' . $job_id );
+                }
+            }
+        }
+
+        return $posts;
+    }
+
+    /**
+     * Prepare virtual posts query to ensure meta data is included
+     *
+     * @param array|null $posts Posts array.
+     * @param \WP_Query $query The query object.
+     * @return array|null
+     */
+    public function prepare_virtual_posts_query( $posts, $query ) {
+        // Only process cws_job queries
+        if ( $query->get( 'post_type' ) !== 'cws_job' ) {
+            return $posts;
+        }
+
+        // If posts are already set (from our replace_job_query), ensure meta data is attached
+        if ( $posts && is_array( $posts ) ) {
+            foreach ( $posts as $post ) {
+                if ( $post->ID < 0 && $post->post_type === 'cws_job' ) {
+                    // Extract job ID from post slug
+                    $slug_parts = explode( '-', $post->post_name );
+                    $job_id = end( $slug_parts );
+                    
+                    if ( $job_id && is_numeric( $job_id ) ) {
+                        $virtual_post = $this->create_virtual_job_post( $job_id );
+                        if ( $virtual_post && isset( $virtual_post->meta_data ) ) {
+                            // Ensure meta data is attached to the post object
+                            $post->meta_data = $virtual_post->meta_data;
+                            
+                            // Also add individual meta properties
+                            foreach ( $virtual_post->meta_data as $key => $value ) {
+                                $post->$key = $value;
+                            }
+                        }
+                    }
                 }
             }
         }
