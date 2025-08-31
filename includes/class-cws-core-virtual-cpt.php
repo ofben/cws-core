@@ -56,6 +56,12 @@ class CWS_Core_Virtual_CPT {
         // Hook into the query preparation to ensure meta data is included
         add_filter( 'posts_pre_query', array( $this, 'prepare_virtual_posts_query' ), 10, 2 );
         
+        // Hook into the_posts filter - this is called after posts are retrieved
+        add_filter( 'the_posts', array( $this, 'add_meta_to_the_posts' ), 10, 2 );
+        
+        // Hook into posts_results filter - another filter called after posts are retrieved
+        add_filter( 'posts_results', array( $this, 'add_meta_to_posts_results' ), 10, 2 );
+        
         // Add more aggressive hooks for EtchWP compatibility
         add_filter( 'posts_clauses', array( $this, 'modify_posts_clauses' ), 10, 2 );
         add_filter( 'posts_where', array( $this, 'modify_posts_where' ), 10, 2 );
@@ -64,6 +70,12 @@ class CWS_Core_Virtual_CPT {
         
         // Hook into get_post to ensure meta data is always available
         add_filter( 'get_post', array( $this, 'add_meta_to_post' ), 10, 2 );
+        
+        // Hook into get_post_metadata - this is the core function that retrieves meta data
+        add_filter( 'get_post_metadata', array( $this, 'get_virtual_post_meta' ), 10, 4 );
+        
+        // Hook into get_post_meta function directly
+        add_filter( 'get_post_meta', array( $this, 'get_virtual_post_meta_direct' ), 10, 4 );
     }
 
     /**
@@ -770,5 +782,77 @@ class CWS_Core_Virtual_CPT {
         }
         
         return $post;
+    }
+
+    /**
+     * Add meta data to posts in the_posts filter
+     *
+     * @param array    $posts Array of post objects.
+     * @param \WP_Query $query The query object.
+     * @return array
+     */
+    public function add_meta_to_the_posts( $posts, $query ) {
+        // Only process cws_job queries
+        if ( $query->get( 'post_type' ) !== 'cws_job' ) {
+            return $posts;
+        }
+
+        $this->log_debug( 'add_meta_to_the_posts called - Processing ' . count( $posts ) . ' posts' );
+
+        if ( $posts && is_array( $posts ) ) {
+            foreach ( $posts as $post ) {
+                if ( $post->ID < 0 && $post->post_type === 'cws_job' ) {
+                    $this->log_debug( 'Processing virtual post: ' . $post->post_name );
+                    
+                    // Extract job ID from post slug
+                    $slug_parts = explode( '-', $post->post_name );
+                    $job_id = end( $slug_parts );
+                    
+                    if ( $job_id && is_numeric( $job_id ) ) {
+                        $virtual_post = $this->create_virtual_job_post( $job_id );
+                        if ( $virtual_post && isset( $virtual_post->meta_data ) ) {
+                            // Add meta data to the post object
+                            $post->meta_data = $virtual_post->meta_data;
+                            
+                            // Also add individual meta properties
+                            foreach ( $virtual_post->meta_data as $key => $value ) {
+                                $post->$key = $value;
+                            }
+                            
+                            $this->log_debug( 'Meta data added to post in the_posts filter: ' . print_r( $virtual_post->meta_data, true ) );
+                        }
+                    }
+                }
+            }
+        }
+
+        return $posts;
+    }
+
+    /**
+     * Direct hook into get_post_meta function
+     *
+     * @param mixed  $value  The post meta value.
+     * @param int    $post_id Post ID.
+     * @param string $key     Meta key.
+     * @param bool   $single  Whether to return a single value.
+     * @return mixed
+     */
+    public function get_virtual_post_meta_direct( $value, $post_id, $key, $single ) {
+        // Only handle virtual posts (negative IDs)
+        if ( $post_id < 0 ) {
+            $this->log_debug( 'get_virtual_post_meta_direct called for post_id: ' . $post_id . ', key: ' . $key );
+            
+            // Try to get the virtual post
+            $virtual_post = $this->get_virtual_post_by_id( $post_id );
+            if ( $virtual_post && isset( $virtual_post->meta_data ) && is_array( $virtual_post->meta_data ) ) {
+                if ( isset( $virtual_post->meta_data[ $key ] ) ) {
+                    $this->log_debug( 'Found meta value for key ' . $key . ': ' . $virtual_post->meta_data[ $key ] );
+                    return $single ? $virtual_post->meta_data[ $key ] : array( $virtual_post->meta_data[ $key ] );
+                }
+            }
+        }
+        
+        return $value;
     }
 }
