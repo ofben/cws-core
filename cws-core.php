@@ -59,6 +59,11 @@ function cws_core_init() {
         error_log( 'CWS Core: Plugin instance created, calling init()' );
         $plugin->init();
         
+        // Set global variable for external access
+        global $cws_core;
+        $cws_core = $plugin;
+        error_log( 'CWS Core: Global variable $cws_core set' );
+        
         error_log( 'CWS Core: Plugin initialization completed successfully' );
     } catch ( Exception $e ) {
         // Log error but don't crash the plugin
