@@ -45,6 +45,10 @@ class CWS_Core_Virtual_CPT {
         
         // Add filter for EtchWP to access meta data
         add_filter( 'rest_prepare_cws_job', array( $this, 'add_meta_to_rest_response' ), 10, 3 );
+        
+        // Hook into WordPress query results to add meta data
+        add_filter( 'the_posts', array( $this, 'add_meta_to_query_results' ), 10, 2 );
+        add_filter( 'posts_results', array( $this, 'add_meta_to_posts_results' ), 10, 2 );
     }
 
     /**
@@ -437,6 +441,14 @@ class CWS_Core_Virtual_CPT {
         $post = $this->create_virtual_job_post( $job_id );
         if ( $post ) {
             $this->log_debug( 'Virtual post debug: ' . print_r( $post, true ) );
+            
+            // Debug meta data specifically
+            if ( isset( $post->meta_data ) ) {
+                $this->log_debug( 'Meta data found: ' . print_r( $post->meta_data, true ) );
+            } else {
+                $this->log_error( 'No meta_data found in virtual post' );
+            }
+            
             return $post;
         }
         $this->log_error( 'Failed to create virtual post for job: ' . $job_id );
@@ -483,5 +495,93 @@ class CWS_Core_Virtual_CPT {
         }
         
         return $response;
+    }
+
+    /**
+     * Add meta data to WordPress query results for EtchWP
+     *
+     * @param array    $posts Array of post objects.
+     * @param \WP_Query $query The query object.
+     * @return array
+     */
+    public function add_meta_to_query_results( $posts, $query ) {
+        // Only process cws_job queries
+        if ( $query->get( 'post_type' ) !== 'cws_job' ) {
+            return $posts;
+        }
+
+        foreach ( $posts as $post ) {
+            // Check if this is a virtual post (negative ID)
+            if ( $post->ID < 0 && $post->post_type === 'cws_job' ) {
+                // Extract job ID from post slug
+                $slug_parts = explode( '-', $post->post_name );
+                $job_id = end( $slug_parts );
+                
+                if ( $job_id && is_numeric( $job_id ) ) {
+                    $virtual_post = $this->create_virtual_job_post( $job_id );
+                    if ( $virtual_post && isset( $virtual_post->meta_data ) ) {
+                        // Add meta data as a property that EtchWP can access
+                        $post->meta_data = $virtual_post->meta_data;
+                        
+                        // Also add individual meta properties for compatibility
+                        foreach ( $virtual_post->meta_data as $key => $value ) {
+                            $post->$key = $value;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $posts;
+    }
+
+    /**
+     * Add meta data to posts_results for EtchWP compatibility
+     *
+     * @param array    $posts Array of post objects.
+     * @param \WP_Query $query The query object.
+     * @return array
+     */
+    public function add_meta_to_posts_results( $posts, $query ) {
+        // Only process cws_job queries
+        if ( $query->get( 'post_type' ) !== 'cws_job' ) {
+            return $posts;
+        }
+
+        $this->log_debug( 'Processing ' . count( $posts ) . ' posts for cws_job query' );
+
+        foreach ( $posts as $post ) {
+            // Check if this is a virtual post (negative ID)
+            if ( $post->ID < 0 && $post->post_type === 'cws_job' ) {
+                $this->log_debug( 'Processing virtual post: ' . $post->post_name );
+                
+                // Extract job ID from post slug
+                $slug_parts = explode( '-', $post->post_name );
+                $job_id = end( $slug_parts );
+                
+                $this->log_debug( 'Extracted job ID: ' . $job_id );
+                
+                if ( $job_id && is_numeric( $job_id ) ) {
+                    $virtual_post = $this->create_virtual_job_post( $job_id );
+                    if ( $virtual_post && isset( $virtual_post->meta_data ) ) {
+                        $this->log_debug( 'Adding meta data to post: ' . print_r( $virtual_post->meta_data, true ) );
+                        
+                        // Add meta data as a property that EtchWP can access
+                        $post->meta_data = $virtual_post->meta_data;
+                        
+                        // Also add individual meta properties for compatibility
+                        foreach ( $virtual_post->meta_data as $key => $value ) {
+                            $post->$key = $value;
+                        }
+                    } else {
+                        $this->log_error( 'Failed to create virtual post or no meta_data for job: ' . $job_id );
+                    }
+                } else {
+                    $this->log_error( 'Invalid job ID extracted: ' . $job_id );
+                }
+            }
+        }
+
+        return $posts;
     }
 }
