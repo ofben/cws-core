@@ -1433,6 +1433,11 @@ class CWS_Core_Virtual_CPT {
                 $wp_query->query_vars['name'] = $job_id;
                 $wp_query->query_vars['p'] = -1; // Virtual post ID
                 
+                // Set the global $post variable for WordPress functions
+                global $post;
+                $post = $virtual_post;
+                setup_postdata( $virtual_post );
+                
                 // Let WordPress handle the template selection
                 // It should now use the single-cws_job.php template or EtchWP template
             } else {
