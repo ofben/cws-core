@@ -131,6 +131,16 @@ class CWS_Core_Admin {
             )
         );
 
+        register_setting(
+            'cws_core_settings',
+            'cws_core_job_ids',
+            array(
+                'type'              => 'string',
+                'sanitize_callback' => array( $this, 'sanitize_job_ids' ),
+                'default'           => '22026695',
+            )
+        );
+
         // Add settings sections
         add_settings_section(
             'cws_core_api_section',
@@ -181,6 +191,14 @@ class CWS_Core_Admin {
             'cws_core_job_slug',
             __( 'Job URL Slug', 'cws-core' ),
             array( $this, 'render_job_slug_field' ),
+            'cws-core-settings',
+            'cws_core_url_section'
+        );
+
+        add_settings_field(
+            'cws_core_job_ids',
+            __( 'Job IDs', 'cws-core' ),
+            array( $this, 'render_job_ids_field' ),
             'cws-core-settings',
             'cws_core_url_section'
         );
@@ -403,6 +421,25 @@ class CWS_Core_Admin {
     }
 
     /**
+     * Render job IDs field
+     */
+    public function render_job_ids_field() {
+        $value = get_option( 'cws_core_job_ids', '22026695' );
+        ?>
+        <textarea 
+            id="cws_core_job_ids" 
+            name="cws_core_job_ids" 
+            rows="3" 
+            cols="50"
+            placeholder="22026695, 22026696, 22026697"
+        ><?php echo esc_textarea( $value ); ?></textarea>
+        <p class="description">
+            <?php esc_html_e( 'Enter job IDs separated by commas. These will be available for EtchWP queries.', 'cws-core' ); ?>
+        </p>
+        <?php
+    }
+
+    /**
      * Render cache duration field
      */
     public function render_cache_duration_field() {
@@ -544,6 +581,18 @@ class CWS_Core_Admin {
      */
     public function sanitize_debug_mode( $value ) {
         return (bool) $value;
+    }
+
+    /**
+     * Sanitize job IDs
+     *
+     * @param string $value Job IDs value.
+     * @return string Sanitized value.
+     */
+    public function sanitize_job_ids( $value ) {
+        $job_ids = array_map( 'trim', explode( ',', $value ) );
+        $job_ids = array_filter( $job_ids, 'is_numeric' ); // Only allow numeric IDs
+        return implode( ',', $job_ids );
     }
 
     /**
