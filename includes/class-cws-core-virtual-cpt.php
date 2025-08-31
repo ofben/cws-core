@@ -77,6 +77,12 @@ class CWS_Core_Virtual_CPT {
         // Hook into get_post_meta function directly
         add_filter( 'get_post_meta', array( $this, 'get_virtual_post_meta_direct' ), 10, 4 );
         
+        // Hook into the core get_post_metadata function at a very early stage
+        add_filter( 'get_post_metadata', array( $this, 'get_virtual_post_meta_early' ), 1, 4 );
+        
+        // Hook into the posts_pre_query at a very early stage
+        add_filter( 'posts_pre_query', array( $this, 'prepare_virtual_posts_query_early' ), 1, 2 );
+        
         // Hook into WP_Query to intercept all queries
         add_action( 'pre_get_posts', array( $this, 'intercept_wp_query' ), 10, 1 );
         
@@ -85,6 +91,9 @@ class CWS_Core_Virtual_CPT {
         
         // Add a custom function for getting virtual post meta
         add_action( 'init', array( $this, 'add_custom_functions' ) );
+        
+        // Add a custom REST API endpoint for EtchWP
+        add_action( 'rest_api_init', array( $this, 'register_etchwp_endpoint' ) );
     }
 
     /**
@@ -926,5 +935,79 @@ class CWS_Core_Virtual_CPT {
                 }
             }
         }
+    }
+
+    /**
+     * Early-stage hook into get_post_metadata
+     *
+     * @param mixed  $value  The post meta value.
+     * @param int    $post_id Post ID.
+     * @param string $key     Meta key.
+     * @param bool   $single  Whether to return a single value.
+     * @return mixed
+     */
+    public function get_virtual_post_meta_early( $value, $post_id, $key, $single ) {
+        // Only handle virtual posts (negative IDs)
+        if ( $post_id < 0 ) {
+            $this->log_debug( 'get_virtual_post_meta_early called for post_id: ' . $post_id . ', key: ' . $key );
+            
+            // Try to get the virtual post
+            $virtual_post = $this->get_virtual_post_by_id( $post_id );
+            if ( $virtual_post && isset( $virtual_post->meta_data ) && is_array( $virtual_post->meta_data ) ) {
+                if ( isset( $virtual_post->meta_data[ $key ] ) ) {
+                    $this->log_debug( 'Early meta found for key ' . $key . ': ' . $virtual_post->meta_data[ $key ] );
+                    return $single ? $virtual_post->meta_data[ $key ] : array( $virtual_post->meta_data[ $key ] );
+                }
+            }
+        }
+        
+        return $value;
+    }
+
+    /**
+     * Early-stage hook into posts_pre_query
+     *
+     * @param array|null $posts Posts array or null.
+     * @param \WP_Query  $query The query object.
+     * @return array|null
+     */
+    public function prepare_virtual_posts_query_early( $posts, $query ) {
+        // Only process cws_job queries
+        if ( $query->get( 'post_type' ) !== 'cws_job' ) {
+            return $posts;
+        }
+
+        $this->log_debug( 'prepare_virtual_posts_query_early called for cws_job query' );
+        return $posts;
+    }
+
+    /**
+     * Register custom REST API endpoint for EtchWP
+     */
+    public function register_etchwp_endpoint() {
+        register_rest_route( 'cws-core/v1', '/etchwp-meta/(?P<post_id>\d+)', array(
+            'methods' => 'GET',
+            'callback' => array( $this, 'get_etchwp_meta' ),
+            'permission_callback' => '__return_true',
+        ) );
+    }
+
+    /**
+     * Get meta data for EtchWP
+     *
+     * @param \WP_REST_Request $request The request object.
+     * @return \WP_REST_Response
+     */
+    public function get_etchwp_meta( $request ) {
+        $post_id = $request->get_param( 'post_id' );
+        
+        if ( $post_id < 0 ) {
+            $virtual_post = $this->get_virtual_post_by_id( $post_id );
+            if ( $virtual_post && isset( $virtual_post->meta_data ) ) {
+                return new \WP_REST_Response( $virtual_post->meta_data, 200 );
+            }
+        }
+        
+        return new \WP_REST_Response( array(), 404 );
     }
 }
