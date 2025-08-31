@@ -103,6 +103,11 @@ class CWS_Core_Virtual_CPT {
         
         // Add admin menu for the CPT
         add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
+        
+        // Add rewrite rules for job URLs
+        add_action( 'init', array( $this, 'add_job_rewrite_rules' ) );
+        add_filter( 'query_vars', array( $this, 'add_job_query_vars' ) );
+        add_action( 'template_redirect', array( $this, 'handle_job_template' ) );
     }
 
     /**
@@ -1341,5 +1346,86 @@ class CWS_Core_Virtual_CPT {
         }
         
         return null;
+    }
+
+    /**
+     * Add rewrite rules for job URLs
+     */
+    public function add_job_rewrite_rules(): void {
+        $job_slug = sanitize_title( get_option( 'cws_core_job_slug', 'job' ) );
+        
+        // Add rewrite rule for /job/{job_id}/ format
+        add_rewrite_rule(
+            '^' . $job_slug . '/([0-9]+)/?$',
+            'index.php?post_type=cws_job&cws_job_id=$matches[1]',
+            'top'
+        );
+        
+        // Flush rewrite rules only once
+        if ( get_option( 'cws_core_flush_rewrite_rules', false ) === false ) {
+            flush_rewrite_rules();
+            update_option( 'cws_core_flush_rewrite_rules', true );
+        }
+    }
+
+    /**
+     * Add query vars for job routing
+     *
+     * @param array $vars Query vars.
+     * @return array
+     */
+    public function add_job_query_vars( array $vars ): array {
+        $vars[] = 'cws_job_id';
+        return $vars;
+    }
+
+    /**
+     * Handle job template routing
+     */
+    public function handle_job_template(): void {
+        // Check if this is a job URL
+        $job_id = get_query_var( 'cws_job_id' );
+        
+        if ( ! empty( $job_id ) ) {
+            // Set up the query to look like a single cws_job post
+            global $wp_query;
+            
+            // Create a virtual post for this job ID
+            $virtual_post = $this->create_virtual_job_post( $job_id );
+            
+            if ( $virtual_post ) {
+                // Set up the query to look like a single post
+                $wp_query->is_single = true;
+                $wp_query->is_singular = true;
+                $wp_query->is_post_type_archive = false;
+                $wp_query->is_archive = false;
+                $wp_query->is_home = false;
+                $wp_query->is_front_page = false;
+                $wp_query->is_page = false;
+                
+                // Set the post type
+                $wp_query->set( 'post_type', 'cws_job' );
+                
+                // Set the post object
+                $wp_query->post = $virtual_post;
+                $wp_query->posts = array( $virtual_post );
+                $wp_query->post_count = 1;
+                $wp_query->found_posts = 1;
+                $wp_query->max_num_pages = 1;
+                
+                // Set up the main query vars
+                $wp_query->query_vars['post_type'] = 'cws_job';
+                $wp_query->query_vars['name'] = $job_id;
+                $wp_query->query_vars['p'] = -1; // Virtual post ID
+                
+                // Let WordPress handle the template selection
+                // It should now use the single-cws_job.php template or EtchWP template
+            } else {
+                // Job not found, return 404
+                global $wp_query;
+                $wp_query->set_404();
+                status_header( 404 );
+            }
+        }
     }
 }
