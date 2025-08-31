@@ -9,6 +9,8 @@
   - Use descriptive function, variable, and file names.
   - Use lowercase with hyphens for directories (e.g., wp-content/themes/my-theme).
   - Favor hooks (actions and filters) for extending functionality.
+  - Follow Git and GitHub best practices for version control.
+  - Maintain comprehensive and up-to-date documentation.
   
   PHP/WordPress
   - Use PHP 8.2+ features when appropriate (e.g., typed properties, arrow functions).
@@ -55,4 +57,34 @@
   8. Use WordPress's hook system for modular and extensible code.
   9. Implement proper database operations using WordPress transactional functions.
   10. Use WordPress's WP_Cron API for scheduling tasks.
+  
+  Git and GitHub Best Practices
+  - Use well-named branches for new features: feature/feature-name, bugfix/issue-description, hotfix/critical-fix
+  - Create small, atomic commits with clear and concise messages
+  - Follow conventional commit message format: type(scope): description
+    * Types: feat, fix, docs, style, refactor, test, chore
+    * Scope: optional component name (e.g., api, admin, cache)
+    * Description: imperative mood, max 72 characters
+  - Examples: feat(api): add job data caching, fix(admin): resolve settings save issue
+  - Write detailed commit messages in the body when necessary
+  - Use pull requests for code reviews and collaboration
+  - Keep branches up-to-date with main/master before merging
+  - Tag releases with semantic versioning (v1.0.0, v1.1.0, etc.)
+  - Use meaningful branch names that describe the purpose
+  - Squash commits when merging feature branches to maintain clean history
+  
+  Documentation Standards
+  - Update documentation whenever code changes are made
+  - Keep README.md, readme.txt, and inline comments current
+  - Document all public functions, classes, and methods
+  - Include usage examples and code snippets in documentation
+  - Maintain changelog with version history and notable changes
+  - Document API endpoints, parameters, and response formats
+  - Keep installation and setup instructions current
+  - Document configuration options and their default values
+  - Include troubleshooting guides for common issues
+  - Update version numbers in all relevant files when releasing
+  - Ensure documentation reflects the current state of the codebase
+  - Use clear, concise language and proper formatting
+  - Include screenshots or examples for complex features
   
