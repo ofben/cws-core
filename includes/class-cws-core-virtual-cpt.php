@@ -306,4 +306,31 @@ class CWS_Core_Virtual_CPT {
             error_log( 'CWS Core Virtual CPT: ' . $message );
         }
     }
+
+    /**
+     * Debug virtual post creation (temporary method for testing)
+     *
+     * @param string $job_id The job ID to debug.
+     * @return \stdClass|false
+     */
+    public function debug_virtual_post( string $job_id ) {
+        $post = $this->create_virtual_job_post( $job_id );
+        if ( $post ) {
+            $this->log_debug( 'Virtual post debug: ' . print_r( $post, true ) );
+            return $post;
+        }
+        $this->log_error( 'Failed to create virtual post for job: ' . $job_id );
+        return false;
+    }
+
+    /**
+     * Log debug message using WordPress debug logging
+     *
+     * @param string $message Debug message.
+     */
+    private function log_debug( string $message ): void {
+        if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+            error_log( 'CWS Core Virtual CPT Debug: ' . $message );
+        }
+    }
 }

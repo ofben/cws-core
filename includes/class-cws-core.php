@@ -293,4 +293,18 @@ class CWS_Core {
             error_log( sprintf( '[CWS Core] [%s] %s', strtoupper( $level ), $message ) );
         }
     }
+
+    /**
+     * Test virtual post creation (temporary method for testing)
+     */
+    public function test_virtual_post(): void {
+        if ( $this->virtual_cpt ) {
+            $post = $this->virtual_cpt->debug_virtual_post( '22026695' );
+            if ( $post ) {
+                $this->log( 'Virtual post created: ' . $post->post_title, 'debug' );
+            } else {
+                $this->log( 'Failed to create virtual post', 'error' );
+            }
+        }
+    }
 }
