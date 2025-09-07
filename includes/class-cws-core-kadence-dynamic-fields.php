@@ -59,6 +59,15 @@ class CWS_Core_Kadence_Dynamic_Fields {
         // Register custom field groups
         add_action('init', array($this, 'register_field_groups'));
         
+        // Register REST API fields for Kadence
+        add_action('rest_api_init', array($this, 'register_rest_fields'));
+        
+        // Add support for Kadence Query Cards
+        add_filter('kadence_blocks_query_card_sources', array($this, 'add_query_card_sources'));
+        
+        // Register custom meta fields for REST API
+        add_action('init', array($this, 'register_meta_fields'));
+        
         $this->plugin->log('Kadence dynamic fields integration initialized', 'info');
     }
 
@@ -488,5 +497,79 @@ class CWS_Core_Kadence_Dynamic_Fields {
      */
     public function get_field_config($field): ?array {
         return $this->dynamic_fields[$field] ?? null;
+    }
+
+    /**
+     * Register REST API fields for Kadence
+     */
+    public function register_rest_fields(): void {
+        // Register all job meta fields for REST API
+        foreach ($this->dynamic_fields as $field_key => $field_config) {
+            register_rest_field('cws_job', $field_key, array(
+                'get_callback' => array($this, 'get_rest_field_value'),
+                'update_callback' => null,
+                'schema' => array(
+                    'description' => $field_config['description'],
+                    'type' => $this->get_rest_field_type($field_config['type']),
+                    'context' => array('view', 'edit')
+                )
+            ));
+        }
+    }
+
+    /**
+     * Get REST field value
+     */
+    public function get_rest_field_value($object, $field_name, $request): string {
+        $post_id = $object['id'];
+        return $this->get_field_value($field_name, $post_id);
+    }
+
+    /**
+     * Get REST field type
+     */
+    private function get_rest_field_type($field_type): string {
+        switch ($field_type) {
+            case 'number':
+                return 'number';
+            case 'date':
+                return 'string';
+            case 'url':
+                return 'string';
+            case 'html':
+                return 'string';
+            default:
+                return 'string';
+        }
+    }
+
+    /**
+     * Add query card sources
+     */
+    public function add_query_card_sources($sources): array {
+        $sources['cws_job'] = array(
+            'label' => 'CWS Job Data',
+            'post_type' => 'cws_job',
+            'fields' => array_keys($this->dynamic_fields),
+            'supports' => array('title', 'excerpt', 'thumbnail', 'meta')
+        );
+        
+        return $sources;
+    }
+
+    /**
+     * Register meta fields for REST API
+     */
+    public function register_meta_fields(): void {
+        foreach ($this->dynamic_fields as $field_key => $field_config) {
+            register_meta('post', $field_key, array(
+                'object_subtype' => 'cws_job',
+                'type' => $this->get_rest_field_type($field_config['type']),
+                'description' => $field_config['description'],
+                'single' => true,
+                'show_in_rest' => true,
+                'auth_callback' => '__return_true'
+            ));
+        }
     }
 }

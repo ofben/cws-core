@@ -44,6 +44,7 @@ require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-kadence-compatibilit
 require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-kadence-dynamic-fields.php';
 require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-kadence-query-builder.php';
 require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-kadence-preview.php';
+require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-kadence-query-cards.php';
 
 // Initialize the plugin
 function cws_core_init() {

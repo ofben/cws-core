@@ -66,6 +66,13 @@ class CWS_Core_Kadence_Compatibility {
     private $preview_system = null;
 
     /**
+     * Query cards integration
+     *
+     * @var CWS_Core_Kadence_Query_Cards
+     */
+    private $query_cards = null;
+
+    /**
      * Constructor
      *
      * @param CWS_Core $plugin Plugin instance.
@@ -134,6 +141,13 @@ class CWS_Core_Kadence_Compatibility {
             $this->preview_system = new CWS_Core_Kadence_Preview($this->plugin);
             $this->preview_system->init();
             $this->plugin->log('Kadence preview system initialized', 'info');
+        }
+
+        // Initialize query cards integration
+        if (class_exists('CWS_Core\\CWS_Core_Kadence_Query_Cards')) {
+            $this->query_cards = new CWS_Core_Kadence_Query_Cards($this->plugin);
+            $this->query_cards->init();
+            $this->plugin->log('Kadence query cards integration initialized', 'info');
         }
     }
 
