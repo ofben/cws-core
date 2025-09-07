@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace CWS_Core;
 
+
+
 /**
  * Virtual CPT functionality class
  */
@@ -27,13 +29,16 @@ class CWS_Core_Virtual_CPT {
      * @param CWS_Core $plugin Plugin instance.
      */
     public function __construct( CWS_Core $plugin ) {
+        error_log('CWS Core: Virtual CPT constructor called');
         $this->plugin = $plugin;
+        error_log('CWS Core: Virtual CPT constructor completed');
     }
 
     /**
      * Initialize virtual CPT
      */
     public function init(): void {
+        
         // Register virtual post type
         add_action( 'init', array( $this, 'register_job_post_type' ) );
         
@@ -45,6 +50,30 @@ class CWS_Core_Virtual_CPT {
         
         // Add filter to ensure meta data is available in all contexts
         add_filter( 'get_post_metadata', array( $this, 'get_virtual_post_meta' ), 10, 4 );
+        
+        // CRITICAL: Add comprehensive hooks for get_post_meta compatibility
+        add_filter( 'get_post_metadata', array( $this, 'get_virtual_post_meta_comprehensive' ), 1, 4 );
+        add_filter( 'get_post_metadata', array( $this, 'get_virtual_post_meta_comprehensive' ), 999, 4 ); // Also add at high priority
+        
+        // Add a custom filter that EtchWP can use
+        add_filter( 'cws_virtual_post_meta', array( $this, 'get_virtual_post_meta_filter' ), 10, 3 );
+        
+        // CRITICAL: Add hooks for WP_Query interception at multiple levels
+        // NOTE: Meta queries are now handled by the specialized meta query handler
+        add_filter( 'posts_pre_query', array( $this, 'intercept_posts_pre_query' ), 1, 2 );
+        add_filter( 'posts_results', array( $this, 'intercept_posts_results' ), 1, 2 );
+        add_filter( 'the_posts', array( $this, 'intercept_the_posts' ), 1, 2 );
+        
+        // Add hook for get_post function specifically
+        add_filter( 'get_post', array( $this, 'intercept_get_post' ), 1, 2 );
+        
+        // Add direct hook for get_post_meta function (corrected filter name)
+        // Temporarily disabled to avoid duplicate method error
+        // add_filter( 'get_post_metadata', array( $this, 'get_virtual_post_meta_direct' ), 1, 4 );
+        
+        // Add hook for WP_Query object modification
+        // Temporarily disabled to avoid caching issues
+        // add_action( 'pre_get_posts', array( $this, 'intercept_pre_get_posts' ), 1, 1 );
         
         // Add filter for EtchWP to access meta data
         add_filter( 'rest_prepare_cws_job', array( $this, 'add_meta_to_rest_response' ), 10, 3 );
@@ -62,9 +91,6 @@ class CWS_Core_Virtual_CPT {
         // Hook into the_posts filter - this is called after posts are retrieved
         add_filter( 'the_posts', array( $this, 'add_meta_to_the_posts' ), 10, 2 );
         
-        // Hook into posts_results filter - another filter called after posts are retrieved
-        add_filter( 'posts_results', array( $this, 'add_meta_to_posts_results' ), 10, 2 );
-        
         // Add more aggressive hooks for EtchWP compatibility
         add_filter( 'posts_clauses', array( $this, 'modify_posts_clauses' ), 10, 2 );
         add_filter( 'posts_where', array( $this, 'modify_posts_where' ), 10, 2 );
@@ -77,8 +103,10 @@ class CWS_Core_Virtual_CPT {
         // Hook into get_post_metadata - this is the core function that retrieves meta data
         add_filter( 'get_post_metadata', array( $this, 'get_virtual_post_meta' ), 10, 4 );
         
-        // Hook into get_post_meta function directly
-        add_filter( 'get_post_meta', array( $this, 'get_virtual_post_meta_direct' ), 10, 4 );
+        // Hook into get_post_meta function directly (corrected filter name)
+        add_filter( 'get_post_metadata', array( $this, 'get_virtual_post_meta_direct' ), 10, 4 );
+        
+
         
         // Hook into the core get_post_metadata function at a very early stage
         add_filter( 'get_post_metadata', array( $this, 'get_virtual_post_meta_early' ), 1, 4 );
@@ -111,6 +139,11 @@ class CWS_Core_Virtual_CPT {
         
         // Handle shortlinks for virtual posts
         add_filter( 'pre_get_shortlink', array( $this, 'handle_virtual_post_shortlink' ), 10, 2 );
+        
+        // Handle meta queries for virtual posts
+        error_log('CWS Core: init() method calling handle_meta_queries()');
+        $this->handle_meta_queries();
+        error_log('CWS Core: init() method completed');
     }
 
     /**
@@ -171,6 +204,12 @@ class CWS_Core_Virtual_CPT {
     public function replace_job_query( $posts, \WP_Query $query ) {
         // Remove the filter to prevent infinite loops
         remove_filter( 'posts_pre_query', array( $this, 'replace_job_query' ) );
+        
+        // SKIP meta queries - let the specialized meta query handler deal with them
+        if (!empty($query->get('meta_query'))) {
+            $this->log_debug( 'Skipping meta query in replace_job_query - will be handled by meta query handler' );
+            return $posts;
+        }
         
         // Get job IDs from the query or use a default list
         $job_ids = $this->get_job_ids_from_query( $query );
@@ -240,9 +279,14 @@ class CWS_Core_Virtual_CPT {
      * @return array
      */
     private function get_configured_job_ids(): array {
-        $job_ids_string = sanitize_text_field( get_option( 'cws_core_job_ids', '22026695' ) );
+        if ( $this->plugin && method_exists( $this->plugin, 'get_configured_job_ids' ) ) {
+            return $this->plugin->get_configured_job_ids();
+        }
+        
+        // Fallback to direct option access
+        $job_ids_string = sanitize_text_field( get_option( 'cws_core_job_ids', '22373204,22373205,22373206,21838202' ) );
         $job_ids = array_map( 'trim', explode( ',', $job_ids_string ) );
-        return array_filter( $job_ids, 'is_numeric' ); // Only allow numeric IDs
+        return array_filter( $job_ids, 'is_numeric' );
     }
 
     /**
@@ -269,7 +313,9 @@ class CWS_Core_Virtual_CPT {
         
         // Create virtual post object
         $post = new \stdClass();
-        $post->ID = -1; // Negative ID to indicate virtual post
+        // Set a unique negative ID for virtual posts based on job ID
+        // Use a hash of the job ID to create a unique negative number
+        $post->ID = -abs(crc32($job_id));
         $post->post_type = 'cws_job';
         $post->post_status = 'publish';
         $post->post_title = sanitize_text_field( $formatted_job['title'] );
@@ -355,6 +401,8 @@ class CWS_Core_Virtual_CPT {
         // Also store as object properties for backward compatibility
         $post->meta_data = $meta_data;
         
+
+        
         // Add individual meta properties directly to the post object
         foreach ( $meta_data as $key => $value ) {
             $post->$key = $value;
@@ -378,6 +426,9 @@ class CWS_Core_Virtual_CPT {
         $post->cws_job_raw_data = $formatted_job['raw_data'];
         
         $this->log_debug( 'Virtual post created with meta data: ' . print_r( $meta_data, true ) );
+        
+        // Store virtual post globally for meta retrieval
+        $GLOBALS['cws_virtual_posts'][$post->ID] = $post;
         
         return $post;
     }
@@ -657,17 +708,40 @@ class CWS_Core_Virtual_CPT {
      */
     private function get_virtual_post_by_id( int $post_id ) {
         // For virtual posts, we need to extract the job ID and recreate the post
-        // This is a fallback method for when we don't have the global $post
         if ( $post_id < 0 ) {
+            // First, check global storage
+            if ( isset( $GLOBALS['cws_virtual_posts'][$post_id] ) ) {
+                $this->log_debug( 'Found virtual post in global storage: ' . $post_id );
+                return $GLOBALS['cws_virtual_posts'][$post_id];
+            }
+            
             // Try to get the post from the current query
             global $wp_query;
             if ( $wp_query && $wp_query->posts ) {
                 foreach ( $wp_query->posts as $post ) {
                     if ( $post->ID === $post_id ) {
+                        $this->log_debug( 'Found virtual post in current query: ' . $post_id );
                         return $post;
                     }
                 }
             }
+            
+            // If not found, try to recreate it from job data
+            // For virtual posts with unique negative IDs, we can reverse-engineer the job ID
+            $job_id = $this->get_job_id_from_virtual_post_id( $post_id );
+            if ( $job_id ) {
+                $this->log_debug( 'Recreating virtual post for job ID: ' . $job_id );
+                $virtual_post = $this->create_virtual_job_post( $job_id );
+                if ( $virtual_post ) {
+                    // Set the ID to match what was requested
+                    $virtual_post->ID = $post_id;
+                    // Store in global storage for future use
+                    $GLOBALS['cws_virtual_posts'][$post_id] = $virtual_post;
+                    return $virtual_post;
+                }
+            }
+            
+            $this->log_debug( 'Virtual post not found: ' . $post_id );
         }
         
         return null;
@@ -836,6 +910,12 @@ class CWS_Core_Virtual_CPT {
             return $posts;
         }
 
+        // SKIP meta queries - let the specialized meta query handler deal with them
+        if (!empty($query->get('meta_query'))) {
+            $this->log_debug( 'Skipping meta query in add_meta_to_query_results - will be handled by meta query handler' );
+            return $posts;
+        }
+
         foreach ( $posts as $post ) {
             // Check if this is a virtual post (negative ID)
             if ( $post->ID < 0 && $post->post_type === 'cws_job' ) {
@@ -871,6 +951,12 @@ class CWS_Core_Virtual_CPT {
     public function add_meta_to_posts_results( $posts, $query ) {
         // Only process cws_job queries
         if ( $query->get( 'post_type' ) !== 'cws_job' ) {
+            return $posts;
+        }
+
+        // SKIP meta queries - let the specialized meta query handler deal with them
+        if (!empty($query->get('meta_query'))) {
+            $this->log_debug( 'Skipping meta query in add_meta_to_posts_results - will be handled by meta query handler' );
             return $posts;
         }
 
@@ -921,6 +1007,12 @@ class CWS_Core_Virtual_CPT {
     public function prepare_virtual_posts_query( $posts, $query ) {
         // Only process cws_job queries
         if ( $query->get( 'post_type' ) !== 'cws_job' ) {
+            return $posts;
+        }
+
+        // SKIP meta queries - let the specialized meta query handler deal with them
+        if (!empty($query->get('meta_query'))) {
+            $this->log_debug( 'Skipping meta query in prepare_virtual_posts_query - will be handled by meta query handler' );
             return $posts;
         }
 
@@ -1037,6 +1129,12 @@ class CWS_Core_Virtual_CPT {
             return $posts;
         }
 
+        // SKIP meta queries - let the specialized meta query handler deal with them
+        if (!empty($query->get('meta_query'))) {
+            $this->log_debug( 'Skipping meta query in add_meta_to_the_posts - will be handled by meta query handler' );
+            return $posts;
+        }
+
         $this->log_debug( 'add_meta_to_the_posts called - Processing ' . count( $posts ) . ' posts' );
 
         if ( $posts && is_array( $posts ) ) {
@@ -1079,17 +1177,43 @@ class CWS_Core_Virtual_CPT {
      * @return mixed
      */
     public function get_virtual_post_meta_direct( $value, $post_id, $key, $single ) {
-        // Only handle virtual posts (negative IDs)
+        // Handle virtual posts (negative IDs OR positive versions of our virtual IDs)
+        $is_virtual_post = false;
+        $virtual_post_id = $post_id;
+        
         if ( $post_id < 0 ) {
-            $this->log_debug( 'get_virtual_post_meta_direct called for post_id: ' . $post_id . ', key: ' . $key );
+            $is_virtual_post = true;
+        } elseif ( $post_id > 0 ) {
+            // Check if this positive ID corresponds to one of our virtual posts
+            $negative_id = -abs($post_id);
+            if ( isset( $GLOBALS['cws_virtual_posts'][$negative_id] ) ) {
+                $is_virtual_post = true;
+                $virtual_post_id = $negative_id;
+            }
+        }
+        
+        if ( $is_virtual_post ) {
             
             // Try to get the virtual post
-            $virtual_post = $this->get_virtual_post_by_id( $post_id );
+            $virtual_post = $this->get_virtual_post_by_id( $virtual_post_id );
+            
             if ( $virtual_post && isset( $virtual_post->meta_data ) && is_array( $virtual_post->meta_data ) ) {
-                if ( isset( $virtual_post->meta_data[ $key ] ) ) {
-                    $this->log_debug( 'Found meta value for key ' . $key . ': ' . $virtual_post->meta_data[ $key ] );
-                    return $single ? $virtual_post->meta_data[ $key ] : array( $virtual_post->meta_data[ $key ] );
+                // Handle the case where no key is specified (get all meta)
+                if ( empty( $key ) || $key === '' ) {
+                    $all_meta = array();
+                    foreach ( $virtual_post->meta_data as $meta_key => $meta_value ) {
+                        $all_meta[ $meta_key ] = array( $meta_value );
+                    }
+                    return $all_meta;
                 }
+                
+                // Handle specific key request
+                if ( isset( $virtual_post->meta_data[ $key ] ) ) {
+                    $meta_value = $virtual_post->meta_data[ $key ];
+                    return $single ? $meta_value : array( $meta_value );
+                }
+                
+                return $single ? '' : array();
             }
         }
         
@@ -1162,6 +1286,12 @@ class CWS_Core_Virtual_CPT {
     public function prepare_virtual_posts_query_early( $posts, $query ) {
         // Only process cws_job queries
         if ( $query->get( 'post_type' ) !== 'cws_job' ) {
+            return $posts;
+        }
+
+        // SKIP meta queries - let the specialized meta query handler deal with them
+        if (!empty($query->get('meta_query'))) {
+            $this->log_debug( 'Skipping meta query in prepare_virtual_posts_query_early - will be handled by meta query handler' );
             return $posts;
         }
 
@@ -1276,6 +1406,16 @@ class CWS_Core_Virtual_CPT {
      * Admin page content
      */
     public function admin_page(): void {
+        // Handle adding job to configured list
+        if (isset($_GET['add_job']) && !empty($_GET['add_job'])) {
+            $job_id = sanitize_text_field($_GET['add_job']);
+            $this->add_job_to_configured_list($job_id);
+            
+            // Redirect to remove the parameter
+            echo '<script>window.location.href = "' . admin_url('admin.php?page=cws-jobs') . '";</script>';
+            return;
+        }
+
         echo '<div class="wrap">';
         echo '<h1>CWS Jobs Management</h1>';
         
@@ -1352,12 +1492,12 @@ class CWS_Core_Virtual_CPT {
             echo '</tbody></table>';
         }
 
-        // Show virtual posts
-        echo '<h2>Virtual Posts (from API):</h2>';
+        // Show configured virtual posts
+        echo '<h2>Configured Virtual Posts (from Settings):</h2>';
         $job_ids = $this->get_configured_job_ids();
         if (!empty($job_ids)) {
             echo '<table class="wp-list-table widefat fixed striped">';
-            echo '<thead><tr><th>Job ID</th><th>Title</th><th>Company</th><th>Location</th></tr></thead>';
+            echo '<thead><tr><th>Job ID</th><th>Title</th><th>Company</th><th>Location</th><th>Status</th></tr></thead>';
             echo '<tbody>';
             
             foreach (array_slice($job_ids, 0, 10) as $job_id) {
@@ -1368,14 +1508,49 @@ class CWS_Core_Virtual_CPT {
                     echo '<td>' . esc_html($virtual_post->post_title) . '</td>';
                     echo '<td>' . esc_html($virtual_post->cws_job_company ?? 'N/A') . '</td>';
                     echo '<td>' . esc_html($virtual_post->cws_job_location ?? 'N/A') . '</td>';
+                    echo '<td><span class="dashicons dashicons-yes-alt" style="color: green;"></span> Configured</td>';
                     echo '</tr>';
                 }
             }
             
             echo '</tbody></table>';
-            echo '<p><em>Showing first 10 jobs. Total: ' . count($job_ids) . '</em></p>';
+            echo '<p><em>Showing first 10 configured jobs. Total: ' . count($job_ids) . '</em></p>';
         } else {
-            echo '<p>No virtual posts found.</p>';
+            echo '<p>No configured virtual posts found.</p>';
+        }
+
+        // Show dynamically discovered jobs
+        echo '<h2>Dynamically Discovered Jobs:</h2>';
+        $discovered_jobs = $this->get_discovered_job_ids();
+        if (!empty($discovered_jobs)) {
+            echo '<table class="wp-list-table widefat fixed striped">';
+            echo '<thead><tr><th>Job ID</th><th>Title</th><th>Company</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>';
+            echo '<tbody>';
+            
+            foreach (array_slice($discovered_jobs, 0, 10) as $job_id) {
+                $virtual_post = $this->create_virtual_job_post($job_id);
+                if ($virtual_post) {
+                    $is_configured = in_array($job_id, $job_ids);
+                    echo '<tr>';
+                    echo '<td>' . esc_html($job_id) . '</td>';
+                    echo '<td>' . esc_html($virtual_post->post_title) . '</td>';
+                    echo '<td>' . esc_html($virtual_post->cws_job_company ?? 'N/A') . '</td>';
+                    echo '<td>' . esc_html($virtual_post->cws_job_location ?? 'N/A') . '</td>';
+                    if ($is_configured) {
+                        echo '<td><span class="dashicons dashicons-yes-alt" style="color: green;"></span> Configured</td>';
+                        echo '<td>-</td>';
+                    } else {
+                        echo '<td><span class="dashicons dashicons-clock" style="color: orange;"></span> Discovered</td>';
+                        echo '<td><a href="' . admin_url('admin.php?page=cws-jobs&add_job=' . $job_id) . '" class="button button-small">Add to Configured</a></td>';
+                    }
+                    echo '</tr>';
+                }
+            }
+            
+            echo '</tbody></table>';
+            echo '<p><em>Showing first 10 discovered jobs. Total: ' . count($discovered_jobs) . '</em></p>';
+        } else {
+            echo '<p>No dynamically discovered jobs found.</p>';
         }
 
         echo '</div>';
@@ -1540,5 +1715,780 @@ class CWS_Core_Virtual_CPT {
         }
         
         return $shortlink;
+    }
+
+    /**
+     * Comprehensive hook for get_post_metadata to ensure meta data is available.
+     * This is the most critical method for EtchWP compatibility.
+     *
+     * @param mixed  $value    The value to return.
+     * @param int    $post_id  Post ID.
+     * @param string $key      Meta key.
+     * @param bool   $single   Whether to return a single value.
+     * @return mixed
+     */
+    public function get_virtual_post_meta_comprehensive( $value, int $post_id, string $key, bool $single ) {
+        // Only handle virtual posts (negative IDs)
+        if ( $post_id < 0 ) {
+            $this->log_debug( 'get_virtual_post_meta_comprehensive called for post_id: ' . $post_id . ', key: ' . $key . ', single: ' . ($single ? 'true' : 'false') );
+            
+            // Try to get the virtual post
+            $virtual_post = $this->get_virtual_post_by_id( $post_id );
+            $this->log_debug( 'Virtual post found: ' . ($virtual_post ? 'yes' : 'no') );
+            if ( $virtual_post ) {
+                $this->log_debug( 'Virtual post has meta_data: ' . (isset( $virtual_post->meta_data ) ? 'yes' : 'no') );
+                if ( isset( $virtual_post->meta_data ) ) {
+                    $this->log_debug( 'Meta_data count: ' . count( $virtual_post->meta_data ) );
+                }
+            }
+            
+            // Handle the case where no key is specified (EtchWP calls get_post_meta($post_id) without a key)
+            if ( empty( $key ) || $key === '' ) {
+                if ( $virtual_post && isset( $virtual_post->meta_data ) && is_array( $virtual_post->meta_data ) ) {
+                    // Convert to the format expected by get_post_meta() when no key is specified
+                    $all_meta = array();
+                    foreach ( $virtual_post->meta_data as $meta_key => $meta_value ) {
+                        $all_meta[ $meta_key ] = array( $meta_value );
+                    }
+                    $this->log_debug( 'Comprehensive meta returning all meta: ' . count( $all_meta ) . ' fields' );
+                    return $all_meta;
+                }
+                $this->log_debug( 'No meta_data found for virtual post' );
+                return array();
+            }
+            
+            if ( $virtual_post && isset( $virtual_post->meta_data ) && is_array( $virtual_post->meta_data ) ) {
+                if ( isset( $virtual_post->meta_data[ $key ] ) ) {
+                    $this->log_debug( 'Comprehensive meta found for key ' . $key . ': ' . $virtual_post->meta_data[ $key ] );
+                    return $single ? $virtual_post->meta_data[ $key ] : array( $virtual_post->meta_data[ $key ] );
+                }
+            }
+
+            // Fallback to object properties if not in meta_data
+            if ( $virtual_post ) {
+                $meta_key = 'cws_job_' . str_replace( 'cws_job_', '', $key );
+                if ( isset( $virtual_post->$meta_key ) ) {
+                    return $single ? $virtual_post->$meta_key : array( $virtual_post->$meta_key );
+                }
+            }
+        }
+        
+        return $value;
+    }
+
+    /**
+     * Filter for EtchWP to access meta data.
+     *
+     * @param mixed  $value    The value to return.
+     * @param int    $post_id  Post ID.
+     * @param string $key      Meta key.
+     * @return mixed
+     */
+    public function get_virtual_post_meta_filter( $value, int $post_id, string $key ) {
+        // This filter is specifically for EtchWP to access meta data.
+        if ( $post_id < 0 ) {
+            $this->log_debug( 'get_virtual_post_meta_filter called for post_id: ' . $post_id . ', key: ' . $key );
+            
+            $virtual_post = $this->get_virtual_post_by_id( $post_id );
+            
+            if ( $virtual_post && isset( $virtual_post->meta_data ) && is_array( $virtual_post->meta_data ) ) {
+                if ( isset( $virtual_post->meta_data[ $key ] ) ) {
+                    return $virtual_post->meta_data[ $key ];
+                }
+            }
+
+            // Fallback to object properties
+            if ( $virtual_post ) {
+                $meta_key = 'cws_job_' . str_replace( 'cws_job_', '', $key );
+                if ( isset( $virtual_post->$meta_key ) ) {
+                    return $virtual_post->$meta_key;
+                }
+            }
+        }
+        
+        return $value;
+    }
+
+    /**
+     * Intercept posts_pre_query filter to inject virtual posts.
+     *
+     * @param array|null $posts    Array of posts or null.
+     * @param WP_Query   $wp_query WP_Query instance.
+     * @return array|null
+     */
+    public function intercept_posts_pre_query( $posts, $wp_query ) {
+        $this->log_debug( 'intercept_posts_pre_query called for post_type: ' . $wp_query->get( 'post_type' ) );
+        
+        // Only handle job queries
+        if ( $wp_query->get( 'post_type' ) === 'cws_job' || 
+             ( $wp_query->is_main_query() && is_post_type_archive( 'cws_job' ) ) ) {
+            
+            // SKIP meta queries - let the specialized meta query handler deal with them
+            if (!empty($wp_query->get('meta_query'))) {
+                $this->log_debug( 'Skipping meta query in posts_pre_query - will be handled by meta query handler' );
+                return $posts;
+            }
+            
+            $this->log_debug( 'Intercepting job query in posts_pre_query' );
+            $virtual_posts = $this->get_virtual_posts_for_query( $wp_query );
+            
+            if ( ! empty( $virtual_posts ) ) {
+                $this->log_debug( 'Returning ' . count( $virtual_posts ) . ' virtual posts from posts_pre_query' );
+                return $virtual_posts;
+            } else {
+                $this->log_debug( 'No virtual posts returned from posts_pre_query' );
+            }
+        } else {
+            $this->log_debug( 'Not intercepting query - not a job query' );
+        }
+        
+        return $posts;
+    }
+
+    /**
+     * Intercept posts_results filter to inject virtual posts.
+     *
+     * @param array    $posts    Array of posts.
+     * @param WP_Query $wp_query WP_Query instance.
+     * @return array
+     */
+    public function intercept_posts_results( $posts, $wp_query ) {
+        $this->log_debug( 'intercept_posts_results called' );
+        
+        // Only handle job queries
+        if ( $wp_query->get( 'post_type' ) === 'cws_job' || 
+             ( $wp_query->is_main_query() && is_post_type_archive( 'cws_job' ) ) ) {
+            
+            // SKIP meta queries - let the specialized meta query handler deal with them
+            if (!empty($wp_query->get('meta_query'))) {
+                $this->log_debug( 'Skipping meta query in posts_results - will be handled by meta query handler' );
+                return $posts;
+            }
+            
+            $this->log_debug( 'Intercepting job query in posts_results' );
+            $virtual_posts = $this->get_virtual_posts_for_query( $wp_query );
+            
+            if ( ! empty( $virtual_posts ) ) {
+                $this->log_debug( 'Returning ' . count( $virtual_posts ) . ' virtual posts from posts_results' );
+                return $virtual_posts;
+            }
+        }
+        
+        return $posts;
+    }
+
+    /**
+     * Intercept the_posts filter to inject virtual posts.
+     *
+     * @param array    $posts    Array of posts.
+     * @param WP_Query $wp_query WP_Query instance.
+     * @return array
+     */
+    public function intercept_the_posts( $posts, $wp_query ) {
+        $this->log_debug( 'intercept_the_posts called' );
+        
+        // Only handle job queries
+        if ( $wp_query->get( 'post_type' ) === 'cws_job' || 
+             ( $wp_query->is_main_query() && is_post_type_archive( 'cws_job' ) ) ) {
+            
+            // SKIP meta queries - let the specialized meta query handler deal with them
+            if (!empty($wp_query->get('meta_query'))) {
+                $this->log_debug( 'Skipping meta query in the_posts - will be handled by meta query handler' );
+                return $posts;
+            }
+            
+            $this->log_debug( 'Intercepting job query in the_posts' );
+            $virtual_posts = $this->get_virtual_posts_for_query( $wp_query );
+            
+            if ( ! empty( $virtual_posts ) ) {
+                $this->log_debug( 'Returning ' . count( $virtual_posts ) . ' virtual posts from the_posts' );
+                return $virtual_posts;
+            }
+        }
+        
+        return $posts;
+    }
+
+    /**
+     * Intercept get_post function to return virtual posts.
+     *
+     * @param WP_Post|null $post    Post object or null.
+     * @param int          $post_id Post ID.
+     * @return WP_Post|null
+     */
+    public function intercept_get_post( $post, $post_id ) {
+        if ( $post_id < 0 ) {
+            $this->log_debug( 'intercept_get_post called for virtual post_id: ' . $post_id );
+            
+            $virtual_post = $this->get_virtual_post_by_id( $post_id );
+            if ( $virtual_post ) {
+                $this->log_debug( 'Returning virtual post from get_post intercept' );
+                return $virtual_post;
+            }
+        }
+        
+        return $post;
+    }
+
+    /**
+     * Get virtual posts for a specific WP_Query.
+     *
+     * @param WP_Query $wp_query The query object.
+     * @return array Array of virtual posts.
+     */
+    public function get_virtual_posts_for_query( $wp_query ) {
+        $this->log_debug( 'get_virtual_posts_for_query called for query: ' . print_r( $wp_query->query_vars, true ) );
+        
+        // Get all virtual posts
+        $all_virtual_posts = $this->get_all_virtual_posts();
+        
+        if ( empty( $all_virtual_posts ) ) {
+            $this->log_debug( 'No virtual posts found' );
+            return array();
+        }
+        
+        // Apply query filters
+        $filtered_posts = $this->filter_virtual_posts_by_query( $all_virtual_posts, $wp_query );
+        
+        return $filtered_posts;
+    }
+
+    /**
+     * Filter virtual posts based on WP_Query parameters.
+     *
+     * @param array    $virtual_posts Array of virtual posts.
+     * @param WP_Query $wp_query      The query object.
+     * @return array Filtered array of virtual posts.
+     */
+    private function filter_virtual_posts_by_query( $virtual_posts, $wp_query ) {
+        $filtered_posts = $virtual_posts;
+        
+        // Apply pagination
+        $posts_per_page = $wp_query->get( 'posts_per_page', 10 );
+        $paged = $wp_query->get( 'paged', 1 );
+        
+        if ( $posts_per_page > 0 ) {
+            $offset = ( $paged - 1 ) * $posts_per_page;
+            $filtered_posts = array_slice( $filtered_posts, $offset, $posts_per_page );
+        }
+        
+        // Apply ordering
+        $orderby = $wp_query->get( 'orderby', 'date' );
+        $order = $wp_query->get( 'order', 'DESC' );
+        
+        if ( $orderby === 'date' ) {
+            usort( $filtered_posts, function( $a, $b ) use ( $order ) {
+                $date_a = strtotime( $a->post_date );
+                $date_b = strtotime( $b->post_date );
+                
+                if ( $order === 'ASC' ) {
+                    return $date_a - $date_b;
+                } else {
+                    return $date_b - $date_a;
+                }
+            } );
+        }
+        
+        return $filtered_posts;
+    }
+
+
+
+
+
+    /**
+     * Get job ID from virtual post ID.
+     *
+     * @param int $virtual_post_id The virtual post ID.
+     * @return string|false The job ID or false if not found.
+     */
+    private function get_job_id_from_virtual_post_id( int $virtual_post_id ) {
+        // Get all configured job IDs and find the one that matches this virtual post ID
+        $job_ids = $this->get_configured_job_ids();
+        
+        foreach ( $job_ids as $job_id ) {
+            $expected_virtual_id = -abs(crc32($job_id));
+            if ( $expected_virtual_id === $virtual_post_id ) {
+                return $job_id;
+            }
+        }
+        
+        // Also check discovered job IDs
+        $discovered_job_ids = $this->get_discovered_job_ids();
+        foreach ( $discovered_job_ids as $job_id ) {
+            $expected_virtual_id = -abs(crc32($job_id));
+            if ( $expected_virtual_id === $virtual_post_id ) {
+                return $job_id;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Get all virtual posts.
+     *
+     * @return array Array of virtual posts.
+     */
+    public function get_all_virtual_posts() {
+        $job_ids = $this->get_configured_job_ids();
+        $virtual_posts = array();
+        
+        foreach ( $job_ids as $job_id ) {
+            $virtual_post = $this->create_virtual_job_post( $job_id );
+            if ( $virtual_post ) {
+                $virtual_posts[] = $virtual_post;
+                // Store virtual post globally for meta retrieval
+                $GLOBALS['cws_virtual_posts'][$virtual_post->ID] = $virtual_post;
+            }
+        }
+        
+        return $virtual_posts;
+    }
+
+    /**
+     * Get discovered job IDs from cache
+     *
+     * @return array
+     */
+    private function get_discovered_job_ids(): array {
+        if ( $this->plugin && $this->plugin->cache ) {
+            $discovered_jobs = $this->plugin->cache->get( 'discovered_job_ids' );
+            if ( $discovered_jobs && is_array( $discovered_jobs ) ) {
+                return $discovered_jobs;
+            }
+        }
+        return array();
+    }
+
+    /**
+     * Add a job ID to the configured list
+     *
+     * @param string $job_id The job ID to add.
+     * @return bool
+     */
+    private function add_job_to_configured_list( string $job_id ): bool {
+        if ( $this->plugin && method_exists( $this->plugin, 'add_job_to_configured_list' ) ) {
+            return $this->plugin->add_job_to_configured_list( $job_id );
+        }
+        
+        // Fallback: directly update the option
+        $current_job_ids = get_option( 'cws_core_job_ids', '' );
+        $job_ids_array = array_map( 'trim', explode( ',', $current_job_ids ) );
+        
+        if ( ! in_array( $job_id, $job_ids_array ) ) {
+            $job_ids_array[] = $job_id;
+            $updated_job_ids = implode( ',', array_filter( $job_ids_array ) );
+            return update_option( 'cws_core_job_ids', $updated_job_ids );
+        }
+        
+        return true; // Already exists
+    }
+
+    /**
+     * Intercept and handle meta queries for virtual posts
+     */
+    public function handle_meta_queries(): void {
+        // Add direct error logging to see if this method is even called
+        error_log('CWS Core: handle_meta_queries() called - setting up hooks');
+        
+        // Hook into posts_pre_query to intercept meta queries at very high priority
+        add_filter('posts_pre_query', array($this, 'intercept_meta_queries'), 999, 2);
+        
+        // Also add a flag to prevent other hooks from interfering
+        add_action('pre_get_posts', array($this, 'mark_meta_query_handled'), 1, 1);
+        
+        // Add a test hook to see if our filter is working
+        add_action('wp_footer', array($this, 'test_meta_query_hooks'), 999);
+        
+        error_log('CWS Core: handle_meta_queries() completed - hooks added');
+    }
+    
+    /**
+     * Mark that we're handling meta queries to prevent conflicts
+     */
+    public function mark_meta_query_handled($query) {
+        if ($query->get('post_type') === 'cws_job' && !empty($query->get('meta_query'))) {
+            $query->set('_cws_meta_handled', true);
+            $this->log_debug('Marked query as meta-handled by CWS Core');
+        }
+    }
+
+    /**
+     * Intercept meta queries and filter virtual posts manually
+     */
+    public function intercept_meta_queries($posts, $query) {
+        // Add direct error logging to see if this method is called
+        error_log('CWS Core: intercept_meta_queries() called');
+        error_log('CWS Core: Query post_type: ' . $query->get('post_type'));
+        error_log('CWS Core: Query has meta_query: ' . (!empty($query->get('meta_query')) ? 'YES' : 'NO'));
+        
+        // Only handle cws_job queries with meta_query
+        if ($query->get('post_type') !== 'cws_job' || empty($query->get('meta_query'))) {
+            error_log('CWS Core: Not handling this query - post_type: ' . $query->get('post_type') . ', meta_query: ' . (!empty($query->get('meta_query')) ? 'present' : 'empty'));
+            return $posts;
+        }
+
+        error_log('CWS Core: === META QUERY INTERCEPTION START ===');
+        error_log('CWS Core: Query post_type: ' . $query->get('post_type'));
+        error_log('CWS Core: Query meta_query: ' . print_r($query->get('meta_query'), true));
+        error_log('CWS Core: Posts before filtering: ' . (is_array($posts) ? count($posts) : 'not array'));
+
+        // IMPORTANT: Check if we're already processing this query to prevent infinite loops
+        static $processing_queries = array();
+        $query_hash = md5(serialize($query->query_vars));
+        
+        if (isset($processing_queries[$query_hash])) {
+            error_log('CWS Core: Already processing this query, returning posts as-is to prevent infinite loop');
+            return $posts;
+        }
+        
+        $processing_queries[$query_hash] = true;
+        error_log('CWS Core: Marked query as being processed');
+
+        try {
+            // Get all available virtual posts
+            $all_virtual_posts = $this->get_all_virtual_posts();
+            error_log('CWS Core: Total virtual posts available: ' . count($all_virtual_posts));
+            
+            if (empty($all_virtual_posts)) {
+                error_log('CWS Core: No virtual posts available, returning empty array');
+                unset($processing_queries[$query_hash]);
+                return array();
+            }
+            
+            // Debug: Show the structure of the first post
+            if (!empty($all_virtual_posts)) {
+                $first_post = $all_virtual_posts[0];
+                error_log('CWS Core: First post structure:');
+                error_log('CWS Core:   ID: ' . $first_post->ID);
+                error_log('CWS Core:   Title: ' . $first_post->post_title);
+                error_log('CWS Core:   Post type: ' . $first_post->post_type);
+                
+                // Check for meta_data property
+                if (isset($first_post->meta_data)) {
+                    error_log('CWS Core:   Has meta_data property: YES');
+                    error_log('CWS Core:   Meta data keys: ' . implode(', ', array_keys($first_post->meta_data)));
+                    if (isset($first_post->meta_data['cws_job_primary_category'])) {
+                        error_log('CWS Core:   Primary category value: ' . $first_post->meta_data['cws_job_primary_category']);
+                    }
+                } else {
+                    error_log('CWS Core:   Has meta_data property: NO');
+                }
+                
+                // Check for direct properties
+                if (isset($first_post->cws_job_primary_category)) {
+                    error_log('CWS Core:   Has cws_job_primary_category property: YES');
+                    error_log('CWS Core:   Primary category value: ' . $first_post->cws_job_primary_category);
+                } else {
+                    error_log('CWS Core:   Has cws_job_primary_category property: NO');
+                }
+                
+                // Check all object properties
+                $properties = get_object_vars($first_post);
+                $meta_properties = array_filter(array_keys($properties), function($key) {
+                    return strpos($key, 'cws_job_') === 0;
+                });
+                if (!empty($meta_properties)) {
+                    error_log('CWS Core:   Meta properties found: ' . implode(', ', $meta_properties));
+                } else {
+                    error_log('CWS Core:   No meta properties found');
+                }
+            }
+
+            // Apply meta query filtering manually
+            $filtered_posts = $this->filter_posts_by_meta_query($all_virtual_posts, $query->get('meta_query'));
+            error_log('CWS Core: Posts after meta filtering: ' . count($filtered_posts));
+            
+            // Apply other query parameters (posts_per_page, orderby, etc.)
+            $filtered_posts = $this->apply_query_parameters($filtered_posts, $query);
+            error_log('CWS Core: Final filtered posts: ' . count($filtered_posts));
+            
+            // Debug the first few filtered posts
+            if (!empty($filtered_posts)) {
+                foreach (array_slice($filtered_posts, 0, 3) as $index => $post) {
+                    error_log("CWS Core: Filtered post {$index}: ID={$post->ID}, title={$post->post_title}");
+                    if (isset($post->meta_data)) {
+                        error_log("CWS Core:   Meta data keys: " . implode(', ', array_keys($post->meta_data)));
+                    }
+                }
+            }
+            
+            error_log('CWS Core: === META QUERY INTERCEPTION COMPLETE ===');
+            
+            unset($processing_queries[$query_hash]);
+            return $filtered_posts;
+            
+        } catch (Exception $e) {
+            error_log('CWS Core: Error in meta query interception: ' . $e->getMessage());
+            unset($processing_queries[$query_hash]);
+            return $posts;
+        }
+    }
+
+    /**
+     * Filter posts by meta query manually
+     */
+    private function filter_posts_by_meta_query($posts, $meta_query): array {
+        if (empty($meta_query)) {
+            error_log('CWS Core: No meta query to filter by, returning all posts');
+            return $posts;
+        }
+
+        error_log('CWS Core: Filtering ' . count($posts) . ' posts with meta query: ' . print_r($meta_query, true));
+        $filtered_posts = array();
+        
+        foreach ($posts as $post) {
+            $matches = $this->post_matches_meta_query($post, $meta_query);
+            error_log("CWS Core: Post {$post->ID} ({$post->post_title}) matches meta query: " . ($matches ? 'YES' : 'NO'));
+            if ($matches) {
+                $filtered_posts[] = $post;
+            }
+        }
+        
+        error_log('CWS Core: Filtered posts result: ' . count($filtered_posts) . ' out of ' . count($posts));
+        return $filtered_posts;
+    }
+
+    /**
+     * Check if a post matches the meta query
+     */
+    private function post_matches_meta_query($post, $meta_query): bool {
+        // Handle simple meta query (single condition)
+        if (isset($meta_query['key'])) {
+            return $this->check_single_meta_condition($post, $meta_query);
+        }
+        
+        // Handle complex meta query (multiple conditions)
+        if (isset($meta_query[0])) {
+            return $this->check_complex_meta_condition($post, $meta_query);
+        }
+        
+        return false;
+    }
+
+    /**
+     * Check a single meta condition
+     */
+    private function check_single_meta_condition($post, $condition): bool {
+        $key = $condition['key'];
+        $value = $condition['value'];
+        $compare = $condition['compare'] ?? '=';
+        
+        error_log("CWS Core: Checking meta condition - key: '{$key}', value: '{$value}', compare: '{$compare}' for post {$post->ID}");
+        
+        // Get the meta value from the virtual post
+        $post_value = $this->get_post_meta_value($post, $key);
+        
+        error_log("CWS Core: Post value for '{$key}': '{$post_value}'");
+        
+        $result = false;
+        switch ($compare) {
+            case '=':
+                $result = $post_value == $value;
+                break;
+            case '!=':
+                $result = $post_value != $value;
+                break;
+            case '>':
+                $result = $post_value > $value;
+                break;
+            case '>=':
+                $result = $post_value >= $value;
+                break;
+            case '<':
+                $result = $post_value < $value;
+                break;
+            case '<=':
+                $result = $post_value <= $value;
+                break;
+            case 'LIKE':
+                $result = stripos($post_value, $value) !== false;
+                break;
+            case 'NOT LIKE':
+                $result = stripos($post_value, $value) === false;
+                break;
+            case 'IN':
+                $result = is_array($value) && in_array($post_value, $value);
+                break;
+            case 'NOT IN':
+                $result = is_array($value) && !in_array($post_value, $value);
+                break;
+            case 'EXISTS':
+                $result = !empty($post_value);
+                break;
+            case 'NOT EXISTS':
+                $result = empty($post_value);
+                break;
+            default:
+                $result = false;
+                break;
+        }
+        
+        error_log("CWS Core: Meta condition result for post {$post->ID}: " . ($result ? 'MATCHES' : 'NO MATCH'));
+        return $result;
+    }
+
+    /**
+     * Check a complex meta condition (multiple conditions with relation)
+     */
+    private function check_complex_meta_condition($post, $meta_query): bool {
+        $relation = $meta_query['relation'] ?? 'AND';
+        $conditions = array_filter($meta_query, function($key) {
+            return is_numeric($key);
+        }, ARRAY_FILTER_USE_KEY);
+        
+        if ($relation === 'OR') {
+            foreach ($conditions as $condition) {
+                if ($this->check_single_meta_condition($post, $condition)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        // Default to AND
+        foreach ($conditions as $condition) {
+            if (!$this->check_single_meta_condition($post, $condition)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Get meta value from virtual post
+     */
+    private function get_post_meta_value($post, $key) {
+        error_log("CWS Core: Getting meta value for key '{$key}' from post {$post->ID}");
+        
+        // Try to get from meta_data property first
+        if (isset($post->meta_data) && isset($post->meta_data[$key])) {
+            $value = $post->meta_data[$key];
+            error_log("CWS Core:   Found in meta_data: '{$value}'");
+            return $value;
+        }
+        
+        // Try to get from direct property
+        if (isset($post->$key)) {
+            $value = $post->$key;
+            error_log("CWS Core:   Found as direct property: '{$value}'");
+            return $value;
+        }
+        
+        // Try with cws_job_ prefix
+        $prefixed_key = 'cws_job_' . str_replace('cws_job_', '', $key);
+        if (isset($post->$prefixed_key)) {
+            $value = $post->$prefixed_key;
+            error_log("CWS Core:   Found with prefixed key '{$prefixed_key}': '{$value}'");
+            return $value;
+        }
+        
+        error_log("CWS Core:   No value found for key '{$key}'");
+        return '';
+    }
+
+    /**
+     * Apply other query parameters (posts_per_page, orderby, etc.)
+     */
+    private function apply_query_parameters($posts, $query): array {
+        // Apply posts_per_page
+        $posts_per_page = $query->get('posts_per_page');
+        if ($posts_per_page > 0 && $posts_per_page < count($posts)) {
+            $posts = array_slice($posts, 0, $posts_per_page);
+        }
+        
+        // Apply orderby and order
+        $orderby = $query->get('orderby');
+        $order = $query->get('order');
+        
+        if ($orderby && $order) {
+            usort($posts, function($a, $b) use ($orderby, $order) {
+                $a_val = $this->get_post_meta_value($a, $orderby);
+                $b_val = $this->get_post_meta_value($b, $orderby);
+                
+                if ($order === 'ASC') {
+                    return $a_val <=> $b_val;
+                } else {
+                    return $b_val <=> $a_val;
+                }
+            });
+        }
+        
+        return $posts;
+    }
+
+    /**
+     * Test method to debug meta query functionality
+     * Call this from your theme or plugin to test
+     */
+    public function test_meta_query() {
+        $this->log_debug('=== TESTING META QUERY FUNCTIONALITY ===');
+        
+        // Test 1: Get all virtual posts
+        $all_posts = $this->get_all_virtual_posts();
+        $this->log_debug('Total virtual posts available: ' . count($all_posts));
+        
+        if (!empty($all_posts)) {
+            $first_post = $all_posts[0];
+            $this->log_debug('First post ID: ' . $first_post->ID);
+            $this->log_debug('First post title: ' . $first_post->post_title);
+            
+            if (isset($first_post->meta_data)) {
+                $this->log_debug('First post meta data keys: ' . implode(', ', array_keys($first_post->meta_data)));
+                $this->log_debug('First post primary category: ' . ($first_post->meta_data['cws_job_primary_category'] ?? 'NOT SET'));
+            }
+            
+            // Test 2: Test meta value retrieval
+            $meta_value = $this->get_post_meta_value($first_post, 'cws_job_primary_category');
+            $this->log_debug('Retrieved meta value for cws_job_primary_category: ' . $meta_value);
+            
+            // Test 3: Test single meta condition
+            $condition = [
+                'key' => 'cws_job_primary_category',
+                'value' => 'Nursing',
+                'compare' => '='
+            ];
+            
+            $matches = $this->check_single_meta_condition($first_post, $condition);
+            $this->log_debug('Post matches condition ' . print_r($condition, true) . ': ' . ($matches ? 'YES' : 'NO'));
+            
+            // Test 4: Test filtering
+            $filtered = $this->filter_posts_by_meta_query($all_posts, $condition);
+            $this->log_debug('Posts filtered by condition: ' . count($filtered) . ' out of ' . count($all_posts));
+        }
+        
+        $this->log_debug('=== END TESTING ===');
+    }
+
+    /**
+     * Test method to verify meta query hooks are working
+     */
+    public function test_meta_query_hooks() {
+        error_log('CWS Core: test_meta_query_hooks() called - checking if hooks are working');
+        
+        // Test if we can create a simple meta query
+        $test_query = new \WP_Query([
+            'post_type' => 'cws_job',
+            'meta_query' => [
+                'key' => 'cws_job_primary_category',
+                'value' => 'Nursing',
+                'compare' => '='
+            ]
+        ]);
+        
+        error_log('CWS Core: Test query created with found_posts: ' . $test_query->found_posts);
+        error_log('CWS Core: Test query post_count: ' . $test_query->post_count);
+        
+        if ($test_query->posts) {
+            error_log('CWS Core: Test query returned ' . count($test_query->posts) . ' posts');
+            foreach ($test_query->posts as $index => $post) {
+                error_log("CWS Core: Test post {$index}: ID={$post->ID}, title={$post->post_title}");
+            }
+        } else {
+            error_log('CWS Core: Test query returned no posts');
+        }
+        
+        wp_reset_postdata();
     }
 }
