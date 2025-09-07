@@ -3,7 +3,7 @@
  * Plugin Name: CWS Core
  * Plugin URI: https://example.com/cws-core
  * Description: WordPress plugin that connects to a public API endpoint to fetch job data and display it on designated pages.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Your Name
  * Author URI: https://example.com
  * License: GPL v2 or later
@@ -28,7 +28,7 @@ if ( ! function_exists( 'add_action' ) ) {
 }
 
 // Define plugin constants
-define( 'CWS_CORE_VERSION', '1.0.0' );
+define( 'CWS_CORE_VERSION', '1.1.0' );
 define( 'CWS_CORE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'CWS_CORE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'CWS_CORE_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
