@@ -411,7 +411,7 @@ class CWS_Core_Kadence_Dynamic_Fields {
         }
         
         $days = floor((time() - $open_timestamp) / DAY_IN_SECONDS);
-        return max(0, $days);
+        return (string) max(0, $days);
     }
 
     /**
