@@ -1,0 +1,347 @@
+/**
+ * Kadence Block Editor Preview Styles
+ * 
+ * @package CWS_Core
+ */
+
+/* Preview Mode Styles */
+.cws-preview-mode {
+    position: relative;
+}
+
+.cws-preview-mode::before {
+    content: "Preview Mode";
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: #0073aa;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    z-index: 9999;
+    font-weight: bold;
+}
+
+/* Preview Controls */
+.cws-preview-controls {
+    background: #f1f1f1;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 15px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.cws-preview-controls::before {
+    content: "Preview Controls:";
+    font-weight: bold;
+    margin-right: 10px;
+    color: #333;
+}
+
+.cws-preview-button {
+    background: #0073aa;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.2s;
+}
+
+.cws-preview-button:hover {
+    background: #005a87;
+}
+
+.cws-preview-button:active {
+    background: #004085;
+}
+
+/* Preview Container */
+.cws-preview-container {
+    border: 2px dashed #0073aa;
+    border-radius: 4px;
+    padding: 20px;
+    margin: 15px 0;
+    background: #f9f9f9;
+    min-height: 200px;
+}
+
+.cws-preview-container::before {
+    content: "Preview Area";
+    display: block;
+    font-weight: bold;
+    color: #0073aa;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+/* Job Preview Styles */
+.cws-job-preview {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.cws-job-preview__title {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.cws-job-preview__company {
+    color: #666;
+    font-size: 16px;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.cws-job-preview__location {
+    color: #888;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.cws-job-preview__salary {
+    color: #0073aa;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.cws-job-preview__description {
+    color: #555;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+/* Block Editor Integration */
+.block-editor .cws-preview-controls {
+    margin: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+}
+
+.block-editor .cws-preview-container {
+    margin: 0;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+}
+
+/* Dynamic Field Preview */
+.cws-dynamic-field-preview {
+    background: #e8f4fd;
+    border: 1px solid #0073aa;
+    border-radius: 3px;
+    padding: 8px 12px;
+    margin: 5px 0;
+    font-size: 13px;
+    color: #0073aa;
+}
+
+.cws-dynamic-field-preview::before {
+    content: "Preview: ";
+    font-weight: bold;
+}
+
+/* Query Builder Preview */
+.cws-query-preview {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+.cws-query-preview__title {
+    font-weight: bold;
+    color: #856404;
+    margin-bottom: 10px;
+}
+
+.cws-query-preview__results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+}
+
+/* Job Card Preview */
+.cws-job-card-preview {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.cws-job-card-preview__title {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.cws-job-card-preview__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: #666;
+}
+
+.cws-job-card-preview__meta span {
+    background: #f5f5f5;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .cws-preview-controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .cws-preview-controls::before {
+        margin-bottom: 10px;
+    }
+    
+    .cws-preview-button {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .cws-query-preview__results {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .cws-preview-controls {
+        background: #2d3748;
+        border-color: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .cws-preview-controls::before {
+        color: #e2e8f0;
+    }
+    
+    .cws-preview-container {
+        background: #2d3748;
+        border-color: #4299e1;
+    }
+    
+    .cws-preview-container::before {
+        color: #4299e1;
+    }
+    
+    .cws-job-preview {
+        background: #4a5568;
+        border-color: #718096;
+        color: #e2e8f0;
+    }
+    
+    .cws-job-preview__title {
+        color: #e2e8f0;
+    }
+    
+    .cws-job-preview__company {
+        color: #a0aec0;
+    }
+    
+    .cws-job-preview__location {
+        color: #cbd5e0;
+    }
+    
+    .cws-job-preview__salary {
+        color: #63b3ed;
+    }
+    
+    .cws-job-preview__description {
+        color: #e2e8f0;
+    }
+    
+    .cws-dynamic-field-preview {
+        background: #2a4365;
+        border-color: #4299e1;
+        color: #63b3ed;
+    }
+    
+    .cws-query-preview {
+        background: #744210;
+        border-color: #d69e2e;
+    }
+    
+    .cws-query-preview__title {
+        color: #f6e05e;
+    }
+    
+    .cws-job-card-preview {
+        background: #4a5568;
+        border-color: #718096;
+    }
+    
+    .cws-job-card-preview__title {
+        color: #e2e8f0;
+    }
+    
+    .cws-job-card-preview__meta {
+        color: #a0aec0;
+    }
+    
+    .cws-job-card-preview__meta span {
+        background: #2d3748;
+    }
+}
+
+/* Animation for Preview Updates */
+.cws-preview-container {
+    transition: all 0.3s ease;
+}
+
+.cws-preview-container.updating {
+    opacity: 0.7;
+    transform: scale(0.98);
+}
+
+/* Loading State */
+.cws-preview-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: #666;
+}
+
+.cws-preview-loading::before {
+    content: "Loading preview...";
+    font-style: italic;
+}
+
+/* Error State */
+.cws-preview-error {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+.cws-preview-error::before {
+    content: "Preview Error: ";
+    font-weight: bold;
+}

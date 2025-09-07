@@ -41,6 +41,9 @@ require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-admin.php';
 require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-public.php';
 require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-virtual-cpt.php';
 require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-kadence-compatibility.php';
+require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-kadence-dynamic-fields.php';
+require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-kadence-query-builder.php';
+require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-kadence-preview.php';
 
 // Initialize the plugin
 function cws_core_init() {

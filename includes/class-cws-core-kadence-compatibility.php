@@ -45,6 +45,27 @@ class CWS_Core_Kadence_Compatibility {
     private bool $is_kadence_pro_active = false;
 
     /**
+     * Dynamic fields integration
+     *
+     * @var CWS_Core_Kadence_Dynamic_Fields
+     */
+    private $dynamic_fields = null;
+
+    /**
+     * Query builder integration
+     *
+     * @var CWS_Core_Kadence_Query_Builder
+     */
+    private $query_builder = null;
+
+    /**
+     * Preview system
+     *
+     * @var CWS_Core_Kadence_Preview
+     */
+    private $preview_system = null;
+
+    /**
      * Constructor
      *
      * @param CWS_Core $plugin Plugin instance.
@@ -64,6 +85,9 @@ class CWS_Core_Kadence_Compatibility {
         }
 
         $this->plugin->log('Initializing Kadence compatibility', 'info');
+        
+        // Initialize advanced integrations
+        $this->init_advanced_integrations();
         
         // Add Kadence-specific hooks
         $this->add_kadence_hooks();
@@ -85,6 +109,32 @@ class CWS_Core_Kadence_Compatibility {
         add_action('wp_enqueue_scripts', array($this, 'enqueue_kadence_scripts'));
 
         $this->plugin->log('Kadence compatibility initialized successfully', 'info');
+    }
+
+    /**
+     * Initialize advanced integrations
+     */
+    private function init_advanced_integrations(): void {
+        // Initialize dynamic fields integration
+        if (class_exists('CWS_Core\\CWS_Core_Kadence_Dynamic_Fields')) {
+            $this->dynamic_fields = new CWS_Core_Kadence_Dynamic_Fields($this->plugin);
+            $this->dynamic_fields->init();
+            $this->plugin->log('Kadence dynamic fields integration initialized', 'info');
+        }
+
+        // Initialize query builder integration
+        if (class_exists('CWS_Core\\CWS_Core_Kadence_Query_Builder')) {
+            $this->query_builder = new CWS_Core_Kadence_Query_Builder($this->plugin);
+            $this->query_builder->init();
+            $this->plugin->log('Kadence query builder integration initialized', 'info');
+        }
+
+        // Initialize preview system
+        if (class_exists('CWS_Core\\CWS_Core_Kadence_Preview')) {
+            $this->preview_system = new CWS_Core_Kadence_Preview($this->plugin);
+            $this->preview_system->init();
+            $this->plugin->log('Kadence preview system initialized', 'info');
+        }
     }
 
     /**
