@@ -55,6 +55,13 @@ class CWS_Core {
     public $virtual_cpt = null;
 
     /**
+     * Kadence compatibility class instance
+     *
+     * @var CWS_Core_Kadence_Compatibility
+     */
+    public $kadence_compatibility = null;
+
+    /**
      * Get plugin instance
      *
      * @return CWS_Core
@@ -110,6 +117,15 @@ class CWS_Core {
             } else {
                 error_log( 'CWS Core: CWS_Core_Virtual_CPT class not found' );
             }
+
+            // Initialize Kadence compatibility class
+            if ( class_exists( 'CWS_Core\\CWS_Core_Kadence_Compatibility' ) ) {
+                error_log( 'CWS Core: Creating Kadence compatibility instance' );
+                $this->kadence_compatibility = new CWS_Core_Kadence_Compatibility( $this );
+                error_log( 'CWS Core: Kadence compatibility instance created successfully' );
+            } else {
+                error_log( 'CWS Core: CWS_Core_Kadence_Compatibility class not found' );
+            }
         } catch ( Exception $e ) {
             // Log error but don't crash the plugin
             error_log( 'CWS Core Component Error: ' . $e->getMessage() );
@@ -157,6 +173,15 @@ class CWS_Core {
                 error_log( 'CWS Core: Virtual CPT initialization completed' );
             } else {
                 error_log( 'CWS Core: Virtual CPT not available for init. virtual_cpt: ' . ($this->virtual_cpt ? 'exists' : 'null') . ', method_exists: ' . ($this->virtual_cpt ? (method_exists( $this->virtual_cpt, 'init' ) ? 'true' : 'false') : 'false') );
+            }
+
+            // Initialize Kadence compatibility
+            if ( $this->kadence_compatibility && method_exists( $this->kadence_compatibility, 'init' ) ) {
+                error_log( 'CWS Core: Initializing Kadence compatibility' );
+                $this->kadence_compatibility->init();
+                error_log( 'CWS Core: Kadence compatibility initialization completed' );
+            } else {
+                error_log( 'CWS Core: Kadence compatibility not available for init. kadence_compatibility: ' . ($this->kadence_compatibility ? 'exists' : 'null') . ', method_exists: ' . ($this->kadence_compatibility ? (method_exists( $this->kadence_compatibility, 'init' ) ? 'true' : 'false') : 'false') );
             }
         } catch ( Exception $e ) {
             // Log error but don't crash the plugin

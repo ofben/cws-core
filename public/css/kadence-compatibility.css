@@ -1,0 +1,237 @@
+/**
+ * Kadence Theme Compatibility Styles
+ * 
+ * @package CWS_Core
+ */
+
+/* CWS Job Wrapper for Kadence */
+.cws-job-kadence-wrapper {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0;
+}
+
+/* Job Meta Styling for Kadence */
+.cws-job-meta-kadence {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.cws-job-meta-kadence .job-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.cws-job-meta-kadence .job-meta-item strong {
+    color: #495057;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.cws-job-meta-kadence .job-meta-item span {
+    color: #212529;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+/* Job Archive Styling for Kadence */
+.cws-jobs-archive-kadence {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.cws-jobs-archive-kadence .job-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.cws-jobs-archive-kadence .job-card {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.cws-jobs-archive-kadence .job-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.cws-jobs-archive-kadence .job-card h3 {
+    margin: 0 0 1rem 0;
+    color: #212529;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.cws-jobs-archive-kadence .job-card .job-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.cws-jobs-archive-kadence .job-card .job-meta span {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+/* Related Jobs Styling */
+.cws-related-jobs {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 2rem;
+    margin: 2rem 0;
+}
+
+.cws-related-jobs h3 {
+    margin: 0 0 1.5rem 0;
+    color: #212529;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+/* Kadence Blocks Integration */
+.cws-job-listing-block {
+    margin: 2rem 0;
+}
+
+.cws-job-listing-block.layout-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.cws-job-listing-block.layout-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.cws-single-job-block {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.cws-job-meta-block {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+    padding: 0.5rem 1rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+    font-size: 0.875rem;
+}
+
+.cws-job-meta-block .meta-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.cws-job-meta-block .meta-value {
+    color: #212529;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .cws-job-meta-kadence {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+    }
+    
+    .cws-jobs-archive-kadence .job-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .cws-job-listing-block.layout-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Kadence Theme Integration */
+.kadence-single .cws-job-kadence-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.kadence-archive .cws-jobs-archive-kadence {
+    max-width: 1200px;
+}
+
+/* Dark Mode Support (if Kadence has dark mode) */
+@media (prefers-color-scheme: dark) {
+    .cws-job-meta-kadence {
+        background: #2d3748;
+        border-color: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .cws-job-meta-kadence .job-meta-item strong {
+        color: #a0aec0;
+    }
+    
+    .cws-job-meta-kadence .job-meta-item span {
+        color: #e2e8f0;
+    }
+    
+    .cws-jobs-archive-kadence .job-card {
+        background: #2d3748;
+        border-color: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .cws-jobs-archive-kadence .job-card h3 {
+        color: #e2e8f0;
+    }
+    
+    .cws-jobs-archive-kadence .job-card .job-meta span {
+        color: #a0aec0;
+    }
+    
+    .cws-related-jobs {
+        background: #2d3748;
+        color: #e2e8f0;
+    }
+    
+    .cws-related-jobs h3 {
+        color: #e2e8f0;
+    }
+    
+    .cws-single-job-block {
+        background: #2d3748;
+        border-color: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .cws-job-meta-block {
+        background: #4a5568;
+        color: #e2e8f0;
+    }
+    
+    .cws-job-meta-block .meta-label {
+        color: #a0aec0;
+    }
+    
+    .cws-job-meta-block .meta-value {
+        color: #e2e8f0;
+    }
+}
