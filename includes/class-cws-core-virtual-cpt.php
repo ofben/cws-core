@@ -1817,11 +1817,24 @@ class CWS_Core_Virtual_CPT {
      * @return array|null
      */
     public function intercept_posts_pre_query( $posts, $wp_query ) {
-        $this->log_debug( 'intercept_posts_pre_query called for post_type: ' . $wp_query->get( 'post_type' ) );
+        $post_type = $wp_query->get( 'post_type' );
+        error_log( 'CWS Core: intercept_posts_pre_query called for post_type: ' . ( is_array( $post_type ) ? implode( ',', $post_type ) : $post_type ) );
         
-        // Only handle job queries
-        if ( $wp_query->get( 'post_type' ) === 'cws_job' || 
-             ( $wp_query->is_main_query() && is_post_type_archive( 'cws_job' ) ) ) {
+        // Check if this is a job query (handle both string and array post types)
+        $is_job_query = false;
+        if ( is_string( $post_type ) && $post_type === 'cws_job' ) {
+            $is_job_query = true;
+            error_log( 'CWS Core: Job query detected (string): ' . $post_type );
+        } elseif ( is_array( $post_type ) && in_array( 'cws_job', $post_type ) ) {
+            $is_job_query = true;
+            error_log( 'CWS Core: Job query detected (array): ' . implode( ',', $post_type ) );
+        } elseif ( $wp_query->is_main_query() && is_post_type_archive( 'cws_job' ) ) {
+            $is_job_query = true;
+            error_log( 'CWS Core: Job query detected (archive)' );
+        }
+        
+        if ( $is_job_query ) {
+            error_log( 'CWS Core: Processing job query in intercept_posts_pre_query' );
             
             // SKIP meta queries - let the specialized meta query handler deal with them
             if (!empty($wp_query->get('meta_query'))) {
@@ -1829,14 +1842,14 @@ class CWS_Core_Virtual_CPT {
                 return $posts;
             }
             
-            $this->log_debug( 'Intercepting job query in posts_pre_query' );
+            error_log( 'CWS Core: Intercepting job query in posts_pre_query' );
             $virtual_posts = $this->get_virtual_posts_for_query( $wp_query );
             
             if ( ! empty( $virtual_posts ) ) {
-                $this->log_debug( 'Returning ' . count( $virtual_posts ) . ' virtual posts from posts_pre_query' );
+                error_log( 'CWS Core: Returning ' . count( $virtual_posts ) . ' virtual posts from posts_pre_query' );
                 return $virtual_posts;
             } else {
-                $this->log_debug( 'No virtual posts returned from posts_pre_query' );
+                error_log( 'CWS Core: No virtual posts returned from posts_pre_query' );
             }
         } else {
             $this->log_debug( 'Not intercepting query - not a job query' );
@@ -1855,9 +1868,18 @@ class CWS_Core_Virtual_CPT {
     public function intercept_posts_results( $posts, $wp_query ) {
         $this->log_debug( 'intercept_posts_results called' );
         
-        // Only handle job queries
-        if ( $wp_query->get( 'post_type' ) === 'cws_job' || 
-             ( $wp_query->is_main_query() && is_post_type_archive( 'cws_job' ) ) ) {
+        // Check if this is a job query (handle both string and array post types)
+        $post_type = $wp_query->get( 'post_type' );
+        $is_job_query = false;
+        if ( is_string( $post_type ) && $post_type === 'cws_job' ) {
+            $is_job_query = true;
+        } elseif ( is_array( $post_type ) && in_array( 'cws_job', $post_type ) ) {
+            $is_job_query = true;
+        } elseif ( $wp_query->is_main_query() && is_post_type_archive( 'cws_job' ) ) {
+            $is_job_query = true;
+        }
+        
+        if ( $is_job_query ) {
             
             // SKIP meta queries - let the specialized meta query handler deal with them
             if (!empty($wp_query->get('meta_query'))) {
@@ -1887,9 +1909,18 @@ class CWS_Core_Virtual_CPT {
     public function intercept_the_posts( $posts, $wp_query ) {
         $this->log_debug( 'intercept_the_posts called' );
         
-        // Only handle job queries
-        if ( $wp_query->get( 'post_type' ) === 'cws_job' || 
-             ( $wp_query->is_main_query() && is_post_type_archive( 'cws_job' ) ) ) {
+        // Check if this is a job query (handle both string and array post types)
+        $post_type = $wp_query->get( 'post_type' );
+        $is_job_query = false;
+        if ( is_string( $post_type ) && $post_type === 'cws_job' ) {
+            $is_job_query = true;
+        } elseif ( is_array( $post_type ) && in_array( 'cws_job', $post_type ) ) {
+            $is_job_query = true;
+        } elseif ( $wp_query->is_main_query() && is_post_type_archive( 'cws_job' ) ) {
+            $is_job_query = true;
+        }
+        
+        if ( $is_job_query ) {
             
             // SKIP meta queries - let the specialized meta query handler deal with them
             if (!empty($wp_query->get('meta_query'))) {
