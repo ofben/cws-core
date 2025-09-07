@@ -2151,17 +2151,19 @@ class CWS_Core_Virtual_CPT {
     public function intercept_meta_queries($posts, $query) {
         // Add direct error logging to see if this method is called
         error_log('CWS Core: intercept_meta_queries() called');
-        error_log('CWS Core: Query post_type: ' . $query->get('post_type'));
+        $post_type = $query->get('post_type');
+        error_log('CWS Core: Query post_type: ' . ( is_array( $post_type ) ? implode( ',', $post_type ) : $post_type ));
         error_log('CWS Core: Query has meta_query: ' . (!empty($query->get('meta_query')) ? 'YES' : 'NO'));
         
         // Only handle cws_job queries with meta_query
         if ($query->get('post_type') !== 'cws_job' || empty($query->get('meta_query'))) {
-            error_log('CWS Core: Not handling this query - post_type: ' . $query->get('post_type') . ', meta_query: ' . (!empty($query->get('meta_query')) ? 'present' : 'empty'));
+            $post_type_str = is_array( $post_type ) ? implode( ',', $post_type ) : $post_type;
+            error_log('CWS Core: Not handling this query - post_type: ' . $post_type_str . ', meta_query: ' . (!empty($query->get('meta_query')) ? 'present' : 'empty'));
             return $posts;
         }
 
         error_log('CWS Core: === META QUERY INTERCEPTION START ===');
-        error_log('CWS Core: Query post_type: ' . $query->get('post_type'));
+        error_log('CWS Core: Query post_type: ' . ( is_array( $post_type ) ? implode( ',', $post_type ) : $post_type ));
         error_log('CWS Core: Query meta_query: ' . print_r($query->get('meta_query'), true));
         error_log('CWS Core: Posts before filtering: ' . (is_array($posts) ? count($posts) : 'not array'));
 
