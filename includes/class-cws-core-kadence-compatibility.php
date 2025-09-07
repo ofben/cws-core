@@ -133,8 +133,8 @@ class CWS_Core_Kadence_Compatibility {
         add_action('kadence_archive_before', array($this, 'kadence_archive_before'));
         add_action('kadence_archive_after', array($this, 'kadence_archive_after'));
         
-        // Content hooks
-        add_filter('kadence_single_content', array($this, 'kadence_single_content'), 10, 2);
+        // Content hooks - use more generic WordPress hooks instead of Kadence-specific ones
+        add_filter('the_content', array($this, 'kadence_single_content'), 10, 1);
         
         // Meta hooks
         add_action('kadence_single_meta', array($this, 'kadence_single_meta'));
@@ -233,7 +233,12 @@ class CWS_Core_Kadence_Compatibility {
     /**
      * Filter Kadence single content
      */
-    public function kadence_single_content($content, $context): string {
+    public function kadence_single_content($content, $context = null): string {
+        // Handle case where only content is passed
+        if ($context === null) {
+            $context = get_post_type();
+        }
+        
         if ($context === 'cws_job') {
             $this->plugin->log('Filtering Kadence single content for CWS job', 'debug');
             
