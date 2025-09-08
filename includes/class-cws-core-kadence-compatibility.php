@@ -206,9 +206,11 @@ class CWS_Core_Kadence_Compatibility {
         // Custom post type support
         add_filter('kadence_post_types', array($this, 'add_cws_job_to_kadence_post_types'));
         
-        // Query Loop integration
-        add_filter('kadence_blocks_pro_query_loop_query_vars', array($this, 'modify_query_loop_query_vars'), 10, 2);
-        add_filter('kadence_blocks_pro_query_loop_post_data', array($this, 'modify_query_loop_post_data'), 10, 2);
+        // Query Loop integration - This is the key filter for Kadence Query Loop
+        add_filter('kadence_blocks_pro_query_loop_query_vars', array($this, 'modify_query_loop_query_vars'), 10, 3);
+        
+        // Disable Kadence's index for cws_job queries to force fallback to our integration
+        add_filter('kadence_blocks_pro_query_loop_disable_index', array($this, 'disable_index_for_cws_jobs'));
         
         // Ensure virtual posts are properly handled in all contexts
         add_filter('the_posts', array($this, 'ensure_virtual_posts_have_content'), 10, 2);
@@ -358,13 +360,71 @@ class CWS_Core_Kadence_Compatibility {
 
     /**
      * Modify Query Loop query vars for CWS jobs
+     * This is the key integration point for Kadence Query Loop
      */
-    public function modify_query_loop_query_vars($query_vars, $block) {
-        // Ensure cws_job post type is properly handled
-        if (isset($query_vars['post_type']) && $query_vars['post_type'] === 'cws_job') {
-            $this->plugin->log('Query Loop query vars modified for cws_job', 'info');
+    public function modify_query_loop_query_vars($query_vars, $ql_query_meta, $ql_id) {
+        // Add error handling for plugin instance
+        if (!$this->plugin) {
+            error_log('CWS Core: Plugin instance not available in modify_query_loop_query_vars');
+            return $query_vars;
         }
+        
+        $this->plugin->log('Kadence Query Loop query vars filter called', 'info');
+        $this->plugin->log('Query vars: ' . print_r($query_vars, true), 'info');
+        $this->plugin->log('Query meta: ' . print_r($ql_query_meta, true), 'info');
+        $this->plugin->log('Query ID: ' . $ql_id, 'info');
+        
+        // Check if this is a cws_job query
+        $post_types = $query_vars['post_type'] ?? array();
+        if (is_string($post_types)) {
+            $post_types = array($post_types);
+        }
+        
+        if (in_array('cws_job', $post_types)) {
+            $this->plugin->log('CWS job query detected in Kadence Query Loop', 'info');
+            
+            // Get all virtual posts and extract their IDs
+            if ($this->plugin && $this->plugin->virtual_cpt && method_exists($this->plugin->virtual_cpt, 'get_all_virtual_posts')) {
+                $this->plugin->log('About to call get_all_virtual_posts', 'info');
+                $virtual_posts = $this->plugin->virtual_cpt->get_all_virtual_posts();
+                $this->plugin->log('Successfully called get_all_virtual_posts, got: ' . count($virtual_posts) . ' posts', 'info');
+                
+                $virtual_post_ids = array();
+                foreach ($virtual_posts as $post) {
+                    if ($post && isset($post->ID)) {
+                        $virtual_post_ids[] = $post->ID;
+                    }
+                }
+                
+                $this->plugin->log('Virtual post IDs for Kadence Query Loop: ' . print_r($virtual_post_ids, true), 'info');
+                
+                // Set the post__in to include our virtual posts
+                $query_vars['post__in'] = $virtual_post_ids;
+                
+                // Ensure we don't exclude our virtual posts
+                unset($query_vars['post__not_in']);
+                
+                $this->plugin->log('Modified query vars: ' . print_r($query_vars, true), 'info');
+            } else {
+                $this->plugin->log('Error: Could not access virtual CPT or get_configured_job_ids method', 'error');
+            }
+        }
+        
         return $query_vars;
+    }
+
+    /**
+     * Disable Kadence's index for cws_job queries
+     */
+    public function disable_index_for_cws_jobs($disable_index) {
+        // Check if we're in a context where cws_job queries might be used
+        if (is_admin() || wp_doing_ajax()) {
+            return $disable_index;
+        }
+        
+        // Disable index to force fallback to our integration
+        $this->plugin->log('Disabling Kadence index for CWS job queries', 'info');
+        return true;
     }
 
     /**
