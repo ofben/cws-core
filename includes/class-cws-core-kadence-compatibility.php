@@ -213,6 +213,18 @@ class CWS_Core_Kadence_Compatibility {
         // Ensure virtual posts are properly handled in all contexts
         add_filter('the_posts', array($this, 'ensure_virtual_posts_have_content'), 10, 2);
         add_filter('posts_results', array($this, 'ensure_virtual_posts_have_content'), 10, 2);
+        
+        // Add hooks for Kadence-specific post data access
+        add_filter('get_post_metadata', array($this, 'handle_kadence_post_metadata'), 10, 4);
+        add_filter('the_title', array($this, 'handle_kadence_post_title'), 10, 2);
+        add_filter('the_content', array($this, 'handle_kadence_post_content'), 10, 1);
+        
+        // Add hooks for Kadence block rendering
+        add_filter('render_block', array($this, 'handle_kadence_block_rendering'), 10, 2);
+        add_filter('kadence_blocks_render_block', array($this, 'handle_kadence_blocks_render'), 10, 2);
+        
+        // Add hook to intercept final output
+        add_filter('the_content', array($this, 'intercept_final_output'), 999, 1);
     }
 
     /**
@@ -396,9 +408,9 @@ class CWS_Core_Kadence_Compatibility {
         }
 
         if ($is_job_query) {
-            $this->plugin->log('Ensuring virtual posts have content for Kadence Query Loop', 'info');
+            $this->plugin->log('Ensuring virtual posts have content for Kadence Query Loop - Found ' . count($posts) . ' posts', 'info');
             
-            foreach ($posts as $post) {
+            foreach ($posts as $index => $post) {
                 if ($post && $post->post_type === 'cws_job' && $post->ID < 0) {
                     // Ensure the post has all required properties for rendering
                     if (empty($post->post_title)) {
@@ -411,12 +423,153 @@ class CWS_Core_Kadence_Compatibility {
                         $post->post_excerpt = 'Job excerpt not available';
                     }
                     
-                    $this->plugin->log('Virtual post content ensured - ID: ' . $post->ID . ', Title: ' . $post->post_title, 'info');
+                    $this->plugin->log('Virtual post content ensured - Index: ' . $index . ', ID: ' . $post->ID . ', Title: ' . $post->post_title . ', Content length: ' . strlen($post->post_content), 'info');
+                    
+                    // Ensure the post object is properly formatted for WordPress
+                    $post->post_name = sanitize_title($post->post_title);
+                    $post->post_status = 'publish';
+                    $post->post_type = 'cws_job';
+                    $post->post_author = 1;
+                    $post->post_date = current_time('mysql');
+                    $post->post_modified = current_time('mysql');
+                    $post->comment_status = 'closed';
+                    $post->ping_status = 'closed';
+                    $post->comment_count = 0;
+                    $post->menu_order = 0;
+                    $post->post_parent = 0;
+                    $post->post_mime_type = '';
+                    $post->filter = 'raw';
+                } else {
+                    $this->plugin->log('Post ' . $index . ' - ID: ' . ($post ? $post->ID : 'null') . ', Type: ' . ($post ? $post->post_type : 'null'), 'info');
                 }
             }
         }
 
         return $posts;
+    }
+
+    /**
+     * Handle Kadence post metadata access
+     */
+    public function handle_kadence_post_metadata($value, $post_id, $meta_key, $single) {
+        // Check if this is a virtual post
+        if ($post_id < 0) {
+            $job_id = $this->get_job_id_from_virtual_post_id($post_id);
+            if ($job_id) {
+                $this->plugin->log('Kadence accessing metadata for virtual post: ' . $post_id . ', key: ' . $meta_key, 'info');
+                
+                // Get the virtual post data
+                $virtual_post = $this->get_virtual_post_by_id($post_id);
+                if ($virtual_post && isset($virtual_post->meta_data[$meta_key])) {
+                    return $virtual_post->meta_data[$meta_key];
+                }
+            }
+        }
+        return $value;
+    }
+
+    /**
+     * Handle Kadence post title access
+     */
+    public function handle_kadence_post_title($title, $post_id) {
+        // Check if this is a virtual post
+        if ($post_id < 0) {
+            $virtual_post = $this->get_virtual_post_by_id($post_id);
+            if ($virtual_post && !empty($virtual_post->post_title)) {
+                $this->plugin->log('Kadence accessing title for virtual post: ' . $post_id . ', title: ' . $virtual_post->post_title, 'info');
+                return $virtual_post->post_title;
+            }
+        }
+        return $title;
+    }
+
+    /**
+     * Handle Kadence post content access
+     */
+    public function handle_kadence_post_content($content) {
+        global $post;
+        
+        // Check if this is a virtual post
+        if ($post && $post->ID < 0 && $post->post_type === 'cws_job') {
+            $virtual_post = $this->get_virtual_post_by_id($post->ID);
+            if ($virtual_post && !empty($virtual_post->post_content)) {
+                $this->plugin->log('Kadence accessing content for virtual post: ' . $post->ID, 'info');
+                return $virtual_post->post_content;
+            }
+        }
+        return $content;
+    }
+
+    /**
+     * Get job ID from virtual post ID
+     */
+    private function get_job_id_from_virtual_post_id($virtual_post_id) {
+        // Get all configured job IDs and find the one that matches this virtual post ID
+        $job_ids = $this->plugin->virtual_cpt->get_configured_job_ids();
+        
+        foreach ($job_ids as $job_id) {
+            $expected_virtual_id = -abs(crc32($job_id));
+            if ($expected_virtual_id === $virtual_post_id) {
+                return $job_id;
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Get virtual post by ID
+     */
+    private function get_virtual_post_by_id($post_id) {
+        $job_id = $this->get_job_id_from_virtual_post_id($post_id);
+        if ($job_id) {
+            return $this->plugin->virtual_cpt->create_virtual_job_post($job_id);
+        }
+        return null;
+    }
+
+    /**
+     * Handle Kadence block rendering
+     */
+    public function handle_kadence_block_rendering($block_content, $block) {
+        // Check if this is a Kadence Query Loop block
+        if (isset($block['blockName']) && strpos($block['blockName'], 'kadence/') === 0) {
+            $this->plugin->log('Kadence block rendering: ' . $block['blockName'], 'info');
+            
+            // If this is a Query Loop block, ensure virtual posts are properly rendered
+            if (strpos($block['blockName'], 'query') !== false) {
+                $this->plugin->log('Query Loop block detected, ensuring virtual posts are rendered', 'info');
+            }
+        }
+        
+        return $block_content;
+    }
+
+    /**
+     * Handle Kadence Blocks render
+     */
+    public function handle_kadence_blocks_render($content, $block) {
+        $this->plugin->log('Kadence Blocks render called', 'info');
+        return $content;
+    }
+
+    /**
+     * Intercept final output to debug what's being rendered
+     */
+    public function intercept_final_output($content) {
+        // Check if this is a page with Query Loop
+        if (strpos($content, 'kadence-query') !== false || strpos($content, 'query-loop') !== false) {
+            $this->plugin->log('Query Loop content detected in final output', 'info');
+            
+            // Check if the content contains job titles
+            if (strpos($content, 'Patient Care') !== false || strpos($content, 'Nurse Aide') !== false) {
+                $this->plugin->log('Job titles found in final output!', 'info');
+            } else {
+                $this->plugin->log('No job titles found in final output', 'info');
+            }
+        }
+        
+        return $content;
     }
 
     /**
