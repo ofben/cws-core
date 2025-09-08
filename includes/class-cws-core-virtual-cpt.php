@@ -321,6 +321,9 @@ class CWS_Core_Virtual_CPT {
         $post->post_title = sanitize_text_field( $formatted_job['title'] );
         $post->post_content = wp_kses_post( $formatted_job['description'] );
         $post->post_excerpt = wp_trim_words( wp_kses_post( $formatted_job['description'] ), 55, '...' );
+        
+        // Debug: Log the post content
+        error_log( 'CWS Core: Created virtual post - ID: ' . $post->ID . ', Title: ' . $post->post_title . ', Content length: ' . strlen( $post->post_content ) );
         $post->post_author = 1;
         $post->post_date = current_time( 'mysql' );
         $post->post_date_gmt = current_time( 'mysql', 1 );
@@ -352,6 +355,15 @@ class CWS_Core_Virtual_CPT {
         $post->post_parent = 0;
         $post->post_status = 'publish';
         $post->post_type = 'cws_job';
+        
+        // Ensure the post object is properly formatted for WordPress
+        $post->post_mime_type = '';
+        $post->post_name = sanitize_title( $post->post_title );
+        $post->post_modified = current_time( 'mysql' );
+        $post->post_modified_gmt = current_time( 'mysql', 1 );
+        
+        // Add filter property for WordPress compatibility
+        $post->filter = 'raw';
         
         // Store meta data in WordPress meta system for standard queries
         $meta_data = array(
@@ -1968,18 +1980,28 @@ class CWS_Core_Virtual_CPT {
      * @return array Array of virtual posts.
      */
     public function get_virtual_posts_for_query( $wp_query ) {
-        $this->log_debug( 'get_virtual_posts_for_query called for query: ' . print_r( $wp_query->query_vars, true ) );
+        error_log( 'CWS Core: get_virtual_posts_for_query called' );
         
         // Get all virtual posts
         $all_virtual_posts = $this->get_all_virtual_posts();
         
         if ( empty( $all_virtual_posts ) ) {
-            $this->log_debug( 'No virtual posts found' );
+            error_log( 'CWS Core: No virtual posts found' );
             return array();
+        }
+        
+        error_log( 'CWS Core: Found ' . count( $all_virtual_posts ) . ' virtual posts' );
+        
+        // Debug: Log the first post details
+        if ( ! empty( $all_virtual_posts ) ) {
+            $first_post = $all_virtual_posts[0];
+            error_log( 'CWS Core: First post - ID: ' . $first_post->ID . ', Title: ' . $first_post->post_title . ', Content: ' . substr( $first_post->post_content, 0, 100 ) . '...' );
         }
         
         // Apply query filters
         $filtered_posts = $this->filter_virtual_posts_by_query( $all_virtual_posts, $wp_query );
+        
+        error_log( 'CWS Core: Returning ' . count( $filtered_posts ) . ' filtered posts' );
         
         return $filtered_posts;
     }

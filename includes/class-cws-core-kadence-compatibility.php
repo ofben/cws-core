@@ -205,6 +205,14 @@ class CWS_Core_Kadence_Compatibility {
         
         // Custom post type support
         add_filter('kadence_post_types', array($this, 'add_cws_job_to_kadence_post_types'));
+        
+        // Query Loop integration
+        add_filter('kadence_blocks_pro_query_loop_query_vars', array($this, 'modify_query_loop_query_vars'), 10, 2);
+        add_filter('kadence_blocks_pro_query_loop_post_data', array($this, 'modify_query_loop_post_data'), 10, 2);
+        
+        // Ensure virtual posts are properly handled in all contexts
+        add_filter('the_posts', array($this, 'ensure_virtual_posts_have_content'), 10, 2);
+        add_filter('posts_results', array($this, 'ensure_virtual_posts_have_content'), 10, 2);
     }
 
     /**
@@ -334,6 +342,81 @@ class CWS_Core_Kadence_Compatibility {
     public function add_cws_job_to_kadence_post_types($post_types): array {
         $post_types[] = 'cws_job';
         return $post_types;
+    }
+
+    /**
+     * Modify Query Loop query vars for CWS jobs
+     */
+    public function modify_query_loop_query_vars($query_vars, $block) {
+        // Ensure cws_job post type is properly handled
+        if (isset($query_vars['post_type']) && $query_vars['post_type'] === 'cws_job') {
+            $this->plugin->log('Query Loop query vars modified for cws_job', 'info');
+        }
+        return $query_vars;
+    }
+
+    /**
+     * Modify Query Loop post data for CWS jobs
+     */
+    public function modify_query_loop_post_data($post_data, $post) {
+        // Ensure virtual posts have proper data for Kadence Query Loop
+        if ($post && $post->post_type === 'cws_job' && $post->ID < 0) {
+            $this->plugin->log('Query Loop post data modified for virtual job: ' . $post->ID, 'info');
+            
+            // Ensure the post has all required properties
+            if (!isset($post_data['title'])) {
+                $post_data['title'] = $post->post_title;
+            }
+            if (!isset($post_data['content'])) {
+                $post_data['content'] = $post->post_content;
+            }
+            if (!isset($post_data['excerpt'])) {
+                $post_data['excerpt'] = $post->post_excerpt;
+            }
+        }
+        return $post_data;
+    }
+
+    /**
+     * Ensure virtual posts have proper content for rendering
+     */
+    public function ensure_virtual_posts_have_content($posts, $query) {
+        if (empty($posts) || !$query) {
+            return $posts;
+        }
+
+        // Check if this is a cws_job query
+        $post_type = $query->get('post_type');
+        $is_job_query = false;
+        
+        if (is_string($post_type) && $post_type === 'cws_job') {
+            $is_job_query = true;
+        } elseif (is_array($post_type) && in_array('cws_job', $post_type)) {
+            $is_job_query = true;
+        }
+
+        if ($is_job_query) {
+            $this->plugin->log('Ensuring virtual posts have content for Kadence Query Loop', 'info');
+            
+            foreach ($posts as $post) {
+                if ($post && $post->post_type === 'cws_job' && $post->ID < 0) {
+                    // Ensure the post has all required properties for rendering
+                    if (empty($post->post_title)) {
+                        $post->post_title = 'Job ' . abs($post->ID);
+                    }
+                    if (empty($post->post_content)) {
+                        $post->post_content = 'Job content not available';
+                    }
+                    if (empty($post->post_excerpt)) {
+                        $post->post_excerpt = 'Job excerpt not available';
+                    }
+                    
+                    $this->plugin->log('Virtual post content ensured - ID: ' . $post->ID . ', Title: ' . $post->post_title, 'info');
+                }
+            }
+        }
+
+        return $posts;
     }
 
     /**
