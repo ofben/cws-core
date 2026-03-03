@@ -36,6 +36,10 @@
             
             // Virtual CPT testing
             $('#cws-core-test-virtual-cpt').on('click', this.testVirtualCPT);
+
+            // Query parameters repeater
+            $('#cws-core-add-query-param').on('click', CWS_Core_Admin.addQueryParamRow);
+            $('#cws-core-query-params-list').on('click', '.cws-core-remove-query-param', CWS_Core_Admin.removeQueryParamRow);
         },
 
         /**
@@ -340,6 +344,35 @@
                 complete: function() {
                     $button.prop('disabled', false).text('Flush Rewrite Rules');
                 }
+            });
+        },
+
+        /**
+         * Add a new query parameter row to the repeater
+         */
+        addQueryParamRow: function(e) {
+            e.preventDefault();
+            var $list = $('#cws-core-query-params-list');
+            var index = $list.find('.cws-core-query-param-row').length;
+            var rowHtml = '<div class="cws-core-query-param-row" style="display:flex; gap:8px; margin-bottom:6px; align-items:center;">'
+                + '<input type="text" name="cws_core_query_params[' + index + '][key]" value="" placeholder="Key" class="regular-text" style="max-width:160px;" />'
+                + '<input type="text" name="cws_core_query_params[' + index + '][value]" value="" placeholder="Value" class="regular-text" style="max-width:200px;" />'
+                + '<button type="button" class="button button-secondary cws-core-remove-query-param">Remove</button>'
+                + '</div>';
+            $list.append(rowHtml);
+        },
+
+        /**
+         * Remove a query parameter row and re-index remaining rows
+         */
+        removeQueryParamRow: function(e) {
+            e.preventDefault();
+            $(this).closest('.cws-core-query-param-row').remove();
+            $('#cws-core-query-params-list').find('.cws-core-query-param-row').each(function(i) {
+                $(this).find('input').each(function() {
+                    var name = $(this).attr('name');
+                    $(this).attr('name', name.replace(/\[\d+\]/, '[' + i + ']'));
+                });
             });
         },
 
