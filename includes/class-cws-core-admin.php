@@ -284,6 +284,7 @@ class CWS_Core_Admin {
                     'connection_failed'  => __( 'Connection failed!', 'cws-core' ),
                     'clearing_cache'     => __( 'Clearing cache...', 'cws-core' ),
                     'cache_cleared'      => __( 'Cache cleared successfully!', 'cws-core' ),
+                    'no_cache_status'    => __( 'No cache — will refresh on next page load', 'cws-core' ),
                 ),
             )
         );

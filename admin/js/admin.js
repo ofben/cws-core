@@ -128,6 +128,11 @@
                         $result.removeClass('loading').addClass('success').html(
                             '<span class="cws-core-status-icon success"></span>' + response.data.message
                         );
+                        if ($('#cws-core-cache-status').length) {
+                            $('#cws-core-cache-status')
+                                .css('color', '#646970')
+                                .html(cws_core_admin.strings.no_cache_status);
+                        }
                     } else {
                         $result.removeClass('loading').addClass('error').html(
                             '<span class="cws-core-status-icon error"></span>' + (response.data ? response.data.message : 'Failed to clear cache')
