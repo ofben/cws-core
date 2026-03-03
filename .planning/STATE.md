@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 5 of 8 (Cache Status & Controls)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-03-03 — v1.1 roadmap created (Phases 5–8)
+Plan: 1 of TBD in current phase
+Status: In progress
+Last activity: 2026-03-03 — 05-01 complete (fetch metadata recording)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [░░░░░░░░░░] in progress
 
 ## Performance Metrics
 
@@ -42,6 +42,10 @@ Progress: [░░░░░░░░░░] 0%
 
 All milestone decisions captured in PROJECT.md Key Decisions table.
 
+- [05-01] Status code 0 used for WP_Error (connection failure) — no HTTP code available; sentinel value for admin UI
+- [05-01] Options not written on cache-hit path — metadata reflects real API attempts only
+- [05-01] delete_option called in clear_all() after transient cleanup without changing $deleted return value
+
 ### Pending Todos
 
 None.
@@ -53,5 +57,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Roadmap created. Phase 5 ready to plan.
+Stopped at: Completed 05-01-PLAN.md (fetch metadata recording)
 Resume file: None

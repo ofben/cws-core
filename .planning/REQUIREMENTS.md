@@ -8,10 +8,10 @@
 
 ### Cache
 
-- [ ] **CACHE-01**: Admin can see when the jobs cache was last refreshed (timestamp) on the settings page
-- [ ] **CACHE-02**: Admin can see whether the last API fetch succeeded or failed, with HTTP status code
+- [x] **CACHE-01**: Admin can see when the jobs cache was last refreshed (timestamp) on the settings page
+- [x] **CACHE-02**: Admin can see whether the last API fetch succeeded or failed, with HTTP status code
 - [ ] **CACHE-03**: Admin can clear the full jobs list cache from the settings page
-- [ ] **CACHE-04**: Admin can see how old the current cache is (human-readable age, e.g. "2 hours ago")
+- [x] **CACHE-04**: Admin can see how old the current cache is (human-readable age, e.g. "2 hours ago")
 
 ### Query Parameters
 
@@ -53,10 +53,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CACHE-01 | Phase 5 | Pending |
-| CACHE-02 | Phase 5 | Pending |
+| CACHE-01 | Phase 5 | Complete (05-01) |
+| CACHE-02 | Phase 5 | Complete (05-01) |
 | CACHE-03 | Phase 5 | Pending |
-| CACHE-04 | Phase 5 | Pending |
+| CACHE-04 | Phase 5 | Complete (05-01) |
 | QUERY-01 | Phase 6 | Pending |
 | QUERY-02 | Phase 6 | Pending |
 | QUERY-03 | Phase 6 | Pending |
@@ -74,4 +74,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-03*
-*Last updated: 2026-03-03 after roadmap creation (Phases 5–8)*
+*Last updated: 2026-03-03 after 05-01 completion (CACHE-01, CACHE-02, CACHE-04 complete)*

@@ -41,7 +41,7 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
   4. Admin can click a button on the settings page to clear the full jobs list cache immediately
 **Plans**: 2 plans
 Plans:
-- [ ] 05-01-PLAN.md — Record fetch metadata (timestamp + HTTP code) to persistent options
+- [x] 05-01-PLAN.md — Record fetch metadata (timestamp + HTTP code) to persistent options
 - [ ] 05-02-PLAN.md — Render cache status in admin UI + JS reset on cache clear
 
 ### Phase 6: Query Parameters
@@ -82,7 +82,7 @@ Plans:
 | 2. Single Job Routing | v1.0 | 3/3 | Complete | 2026-03-01 |
 | 3. Preview and Polish | v1.0 | 2/2 | Complete | 2026-03-02 |
 | 4. Integration Cleanup | v1.0 | 1/1 | Complete | 2026-03-02 |
-| 5. Cache Status & Controls | v1.1 | 0/2 | Not started | - |
+| 5. Cache Status & Controls | v1.1 | 1/2 | In progress | - |
 | 6. Query Parameters | v1.1 | 0/TBD | Not started | - |
 | 7. Field Groupings | v1.1 | 0/TBD | Not started | - |
 | 8. Preview Fallback | v1.1 | 0/TBD | Not started | - |
