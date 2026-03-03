@@ -174,6 +174,16 @@ class CWS_Core_Admin {
             )
         );
 
+        register_setting(
+            'cws_core_settings',
+            'cws_core_preview_job_id',
+            array(
+                'type'              => 'string',
+                'sanitize_callback' => array( $this, 'sanitize_preview_job_id' ),
+                'default'           => '',
+            )
+        );
+
         // Add settings sections
         add_settings_section(
             'cws_core_api_section',
@@ -256,6 +266,14 @@ class CWS_Core_Admin {
             'cws_core_job_template_page_id',
             __( 'Job Template Page', 'cws-core' ),
             array( $this, 'render_job_template_page_field' ),
+            'cws-core-settings',
+            'cws_core_url_section'
+        );
+
+        add_settings_field(
+            'cws_core_preview_job_id',
+            __( 'Etch Preview Job ID', 'cws-core' ),
+            array( $this, 'render_preview_job_id_field' ),
             'cws-core-settings',
             'cws_core_url_section'
         );
@@ -580,6 +598,16 @@ class CWS_Core_Admin {
     }
 
     /**
+     * Sanitize Etch preview job ID input.
+     *
+     * @param mixed $value Raw input from the form.
+     * @return string Sanitized job ID string (empty string if not set).
+     */
+    public function sanitize_preview_job_id( $value ) {
+        return sanitize_text_field( $value );
+    }
+
+    /**
      * Render job slug field
      */
     public function render_job_slug_field() {
@@ -655,6 +683,34 @@ class CWS_Core_Admin {
                     . esc_html__( 'Warning: The selected page does not exist or is not published. Single job URLs will not load correctly.', 'cws-core' )
                     . '</p>';
             }
+        }
+    }
+
+    /**
+     * Render Etch preview job ID field.
+     *
+     * Displays a text input for the admin-configurable preview job ID
+     * used when the Etch builder is active (?etch=magic) and no real
+     * job ID is present in the URL.
+     */
+    public function render_preview_job_id_field() {
+        $value = get_option( 'cws_core_preview_job_id', '' );
+        ?>
+        <input type="text"
+               id="cws_core_preview_job_id"
+               name="cws_core_preview_job_id"
+               value="<?php echo esc_attr( $value ); ?>"
+               class="regular-text"
+               placeholder="<?php esc_attr_e( 'e.g. 22026695', 'cws-core' ); ?>" />
+        <?php
+        if ( empty( $value ) ) {
+            echo '<p class="description">'
+                . esc_html__( 'No preview job configured — falling back to first job in list when ?etch=magic is active.', 'cws-core' )
+                . '</p>';
+        } else {
+            echo '<p class="description">'
+                . esc_html__( 'The Etch builder (?etch=magic) will use this job ID for the single job preview. Falls back to first configured job if the API returns no data.', 'cws-core' )
+                . '</p>';
         }
     }
 
