@@ -164,6 +164,16 @@ class CWS_Core_Admin {
             )
         );
 
+        register_setting(
+            'cws_core_settings',
+            'cws_core_field_groupings',
+            array(
+                'type'              => 'array',
+                'sanitize_callback' => array( $this, 'sanitize_field_groupings' ),
+                'default'           => array(),
+            )
+        );
+
         // Add settings sections
         add_settings_section(
             'cws_core_api_section',
@@ -214,6 +224,14 @@ class CWS_Core_Admin {
             'cws_core_query_params',
             __( 'Query Parameters', 'cws-core' ),
             array( $this, 'render_query_params_field' ),
+            'cws-core-settings',
+            'cws_core_api_section'
+        );
+
+        add_settings_field(
+            'cws_core_field_groupings',
+            __( 'Field Groupings', 'cws-core' ),
+            array( $this, 'render_field_groupings_field' ),
             'cws-core-settings',
             'cws_core_api_section'
         );
@@ -501,6 +519,61 @@ class CWS_Core_Admin {
                 'key'   => $key,
                 'value' => sanitize_text_field( isset( $row['value'] ) ? $row['value'] : '' ),
             );
+        }
+
+        return array_values( $cleaned );
+    }
+
+    /**
+     * Render field groupings repeater field
+     */
+    public function render_field_groupings_field() {
+        $groupings = get_option( 'cws_core_field_groupings', array() );
+        if ( ! is_array( $groupings ) ) {
+            $groupings = array();
+        }
+
+        echo '<div id="cws-core-field-groupings-list">';
+
+        if ( empty( $groupings ) ) {
+            echo '<div class="cws-core-field-grouping-row" style="display:flex; gap:8px; margin-bottom:6px; align-items:center;">';
+            echo '<input type="text" name="cws_core_field_groupings[0]" value="" placeholder="' . esc_attr__( 'e.g. primary_category', 'cws-core' ) . '" class="regular-text" style="max-width:220px;" />';
+            echo '<button type="button" class="button button-secondary cws-core-remove-field-grouping">' . esc_html__( 'Remove', 'cws-core' ) . '</button>';
+            echo '</div>';
+        } else {
+            $i = 0;
+            foreach ( $groupings as $field_name ) {
+                echo '<div class="cws-core-field-grouping-row" style="display:flex; gap:8px; margin-bottom:6px; align-items:center;">';
+                echo '<input type="text" name="cws_core_field_groupings[' . $i . ']" value="' . esc_attr( $field_name ) . '" placeholder="' . esc_attr__( 'e.g. primary_category', 'cws-core' ) . '" class="regular-text" style="max-width:220px;" />';
+                echo '<button type="button" class="button button-secondary cws-core-remove-field-grouping">' . esc_html__( 'Remove', 'cws-core' ) . '</button>';
+                echo '</div>';
+                $i++;
+            }
+        }
+
+        echo '</div>';
+        echo '<button type="button" id="cws-core-add-field-grouping" class="button button-secondary">' . esc_html__( 'Add Grouping', 'cws-core' ) . '</button>';
+        echo '<p class="description">' . esc_html__( 'Each field name creates a {options.cws_jobs_by_{field}} variable in Etch, keyed by unique field values. Example: entering \'primary_category\' exposes {options.cws_jobs_by_primary_category}.', 'cws-core' ) . '</p>';
+    }
+
+    /**
+     * Sanitize field groupings repeater input
+     *
+     * @param mixed $value Raw input from the form.
+     * @return array Sanitized flat array of field name strings.
+     */
+    public function sanitize_field_groupings( $value ) {
+        if ( ! is_array( $value ) ) {
+            return array();
+        }
+
+        $cleaned = array();
+        foreach ( $value as $field_name ) {
+            $field_name = sanitize_text_field( $field_name );
+            if ( '' === $field_name ) {
+                continue;
+            }
+            $cleaned[] = $field_name;
         }
 
         return array_values( $cleaned );
