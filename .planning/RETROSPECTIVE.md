@@ -78,6 +78,40 @@
 
 ---
 
+## Milestone: v1.2 — Tech Debt & Stability
+
+**Shipped:** 2026-03-03
+**Phases:** 1 (9) | **Plans:** 1 | **Sessions:** 1 (same day as v1.1)
+
+### What Was Built
+- `fetch_job_data()` error-path metadata: JSON parse failure and invalid response structure paths now write `cws_core_last_fetch_time` + `cws_core_last_fetch_status=0` before `return false` — all 5 error paths covered (GAP-1 closed)
+- `uninstall.php` cleanup: all 9 `cws_core_*` wp_options now deleted on plugin removal (GAP-2 closed)
+- Dead code removal: `testVirtualCPT` method and event binding gone from `admin.js` (~95 lines removed)
+
+### What Worked
+- **Audit as a driving specification** — the v1.1 audit identified exactly what needed fixing; Phase 9 plan was written directly from the gap descriptions; zero ambiguity, zero rework
+- **Tight single-plan phase** — 3 tasks, 3 atomic commits, done in 2 minutes; the gap-closure format (audit → plan → execute) is extremely efficient for this type of work
+- **Sentinel value 0 — already handled** — `render_cache_status_block()` already had the `0 === $status_code` branch; Phase 9 only needed to write the value on the missing paths, not update the display layer
+
+### What Was Inefficient
+- **GAP-3 discovered during v1.2 audit** — 3 v1.0-era wp_options absent from `uninstall.php` were found during Phase 9's integration check; they predated v1.2 and weren't in scope, but would have been caught earlier by a more thorough v1.0 audit. Gap-closure milestones can still surface older debt.
+
+### Patterns Established
+- **Gap-closure milestone format** — a dedicated 1-phase milestone to close prior audit gaps is a clean pattern: audit output drives plan input directly, no requirements needed, scope is bounded and verifiable
+- **All fetch paths write status metadata** — `fetch_job_data()` must write `cws_core_last_fetch_time` + `cws_core_last_fetch_status` on every path that touches the API (success, WP_Error, HTTP error, JSON parse failure, invalid structure). Established in CLAUDE.md "Common Mistakes to Avoid".
+
+### Key Lessons
+1. **Audit-driven planning is the most efficient path for debt closure** — the audit report is the spec; writing a plan from it takes minutes and produces a perfectly scoped plan with no ambiguity
+2. **All-paths coverage is easy to miss incrementally** — GAP-1 survived from Phase 5 because the original implementation only added metadata to the WP_Error and HTTP error paths; JSON parse and invalid structure were added later and the metadata writes weren't added consistently. Full-path review (or a test that exercises each path) would have caught this.
+3. **Check `uninstall.php` whenever new wp_options are added** — GAP-2 and GAP-3 both came from options added without updating uninstall cleanup. Add to PR checklist or CLAUDE.md.
+
+### Cost Observations
+- Model mix: ~100% sonnet (balanced profile)
+- Sessions: 1 (same day as v1.1 archival)
+- Notable: Smallest milestone to date — 1 phase, 1 plan, 3 tasks, 2 minutes execution time
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -86,6 +120,7 @@
 |-----------|--------|-------|------------|
 | v1.0 | 4 | 8 | Initial baseline — filter integration replaces virtual CPT |
 | v1.1 | 4 | 5 | Admin tooling layer; repeater pattern established and reused across 4 phases |
+| v1.2 | 1 | 1 | Gap-closure milestone — audit as spec, no formal requirements needed |
 
 ### Cumulative Quality
 
@@ -93,9 +128,11 @@
 |-----------|-------|------------|----------------|
 | v1.0 | Yes | 3 (1 critical, 2 partial) | Phase 4 added to close all gaps |
 | v1.1 | Yes | 0 critical, 2 low (tech debt) | Accepted and carried forward to v1.2 |
+| v1.2 | Yes | 0 (1 pre-existing GAP-3 noted) | GAP-3 carried forward to v1.3 |
 
 ### Top Lessons (Verified Across Milestones)
 
 1. Always audit before archiving — gaps are cheaper to close before a milestone is marked shipped
 2. Normalize data at the injection layer, not in templates
 3. Etch builder uses REST API context — any builder-facing feature needs a `REST_REQUEST` guard in `inject_options()`
+4. Update `uninstall.php` every time a new wp_option is registered — GAP-2 and GAP-3 both came from missing this step

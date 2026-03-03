@@ -1,5 +1,23 @@
 # Milestones
 
+## v1.2 Tech Debt & Stability (Shipped: 2026-03-03)
+
+**Phases completed:** 1 phase (9), 1 plan
+**Files changed:** 3 | **PHP/JS LOC:** ~3,866 | **Timeline:** 2026-03-03 (1 day)
+**Commits:** 3 | **Git range:** a69e7fb → 1f04c07
+
+**Delivered:** All v1.1 audit gaps closed — error-path status writes complete, uninstall cleanup covers all 9 wp_options, dead `testVirtualCPT` JS removed. Plugin internals are now consistent with the admin UI guarantees made in v1.1.
+
+**Key accomplishments:**
+- `fetch_job_data()` now writes status metadata (`cws_core_last_fetch_time` + `cws_core_last_fetch_status=0`) on all 5 error paths including JSON parse failure and invalid response structure — GAP-1 closed
+- `uninstall.php` now deletes all 9 `cws_core_*` wp_options (4 original + 5 added in v1.1), preventing orphaned data after plugin removal — GAP-2 closed
+- Dead `testVirtualCPT` method and event binding removed from `admin.js` (~95 lines) — no server-side handler ever existed
+
+**Tech debt carried forward:**
+- GAP-3 (pre-existing from v1.0): 3 additional wp_options missing from uninstall.php — `cws_core_job_slug`, `cws_core_job_ids`, `cws_core_job_template_page_id`
+
+---
+
 ## v1.1 Admin Tooling & Dynamic Groupings (Shipped: 2026-03-03)
 
 **Phases completed:** 4 phases (5–8), 5 plans

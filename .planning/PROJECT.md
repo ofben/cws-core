@@ -45,21 +45,19 @@ Job data from the external API is reliably available in any Etch template via th
 
 ## Context
 
-**Shipped v1.1** with ~2,511 LOC PHP. Tech stack: PHP, WordPress 5.0+, Etch v1.3.1.
+**Shipped v1.2** with ~3,866 LOC PHP/JS/CSS. Tech stack: PHP, WordPress 5.0+, Etch v1.3.1.
 
-The virtual CPT approach (2,494 lines, 20+ hooks) has been fully removed (v1.0). Admin tooling added in v1.1 gives full visibility and control over the API connection, including cache monitoring, custom query parameters, field-based groupings, and preview job configuration.
+The virtual CPT approach (2,494 lines, 20+ hooks) has been fully removed (v1.0). Admin tooling added in v1.1 gives full visibility and control over the API connection, including cache monitoring, custom query parameters, field-based groupings, and preview job configuration. v1.2 closed all v1.1 audit gaps — status metadata is now written on all `fetch_job_data()` error paths and `uninstall.php` covers all 9 `cws_core_*` wp_options.
 
 **Etch template usage:**
-- Listing page: `{#loop options.cws_jobs as job}...{/loop}`
+- Listing page: `{````#loop```` options.cws_jobs as job}...{/loop}`
 - Single page: `{options.cws_job.title}`, `{options.cws_job.description}`, etc.
 - Preview in builder: uses admin-configured preview job ID, falls back to first configured job
 - Date fields: `{options.cws_job.open_date_formatted}`, `{options.cws_job.update_date_formatted}`
 - Field groupings: `{options.cws_jobs_by_primary_category}`, `{options.cws_jobs_by_primary_city}`, etc. (configured in settings)
 
 **Known issues / tech debt:**
-- `fetch_job_data()` does not write status metadata on JSON parse failure or invalid response structure paths (stale admin display for edge case — low priority)
-- `uninstall.php` missing cleanup for all 5 v1.1 wp_options (`cws_core_last_fetch_time`, `cws_core_last_fetch_status`, `cws_core_query_params`, `cws_core_field_groupings`, `cws_core_preview_job_id`)
-- Dead `testVirtualCPT` JS method + AJAX action in `admin.js` (pre-v1.0 legacy, harmless)
+- GAP-3 (pre-existing from v1.0): `uninstall.php` missing cleanup for 3 v1.0-era wp_options — `cws_core_job_slug`, `cws_core_job_ids`, `cws_core_job_template_page_id`
 - `@var CWS_Core_Public` PHPDoc comment on dead `$public` property in `class-cws-core.php` (harmless)
 
 ## Constraints
@@ -73,7 +71,7 @@ The virtual CPT approach (2,494 lines, 20+ hooks) has been fully removed (v1.0).
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
-|----------|-----------|---------|
+| --- | --- | --- |
 | Use `etch/dynamic_data/option` filter | Official Etch hook, documented, survives upgrades | ✓ Good — clean integration, confirmed stable in v1.3.1 |
 | Replace virtual CPT entirely | 2494-line file, fragile meta hook approach, root cause of breakage | ✓ Good — 2,511 LOC result vs original ~5k+; no more upgrade breakage |
 | Keep pretty URLs `/job/{id}/` | Better SEO than query params, user preference | ✓ Good — unchanged, works correctly |
@@ -92,6 +90,8 @@ The virtual CPT approach (2,494 lines, 20+ hooks) has been fully removed (v1.0).
 | `resolve_preview_job()` extracted as private method | Called from both `handle_single_job()` and `inject_options()` — shared logic | ✓ Good — single source of truth for preview resolution |
 | `elseif` fallback in `resolve_preview_job()` — retry with `reset($job_ids)` when configured ID returns no data | Graceful degradation when configured preview job is unavailable | ✓ Good — builder never shows blank fields |
 | `REST_REQUEST` guard in `inject_options()` | Etch builder uses REST API context where `template_redirect` never fires — preview resolution must also work there | ✓ Good — discovered and fixed during Phase 8 execution |
+| Sentinel value `0` for status on JSON parse / invalid structure failure | No HTTP code available for these paths; `0` is distinct from `null` (no fetch yet) and already handled by `render_cache_status_block()` | ✓ Good — v1.2 |
+| No PHP-side change needed for `testVirtualCPT` removal | The AJAX action `cws_core_test_virtual_cpt` was never registered server-side — removing JS-only was sufficient | ✓ Good — v1.2 |
 
 ---
-*Last updated: 2026-03-03 after v1.1 milestone*
+*Last updated: 2026-03-03 after v1.2 milestone*
