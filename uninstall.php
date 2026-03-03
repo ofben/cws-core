@@ -28,6 +28,12 @@ function cws_core_uninstall() {
         'cws_core_organization_id',
         'cws_core_cache_duration',
         'cws_core_debug_mode',
+        // Added in v1.1
+        'cws_core_last_fetch_time',
+        'cws_core_last_fetch_status',
+        'cws_core_query_params',
+        'cws_core_field_groupings',
+        'cws_core_preview_job_id',
     );
 
     foreach ( $options_to_delete as $option ) {
