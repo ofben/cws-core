@@ -61,6 +61,14 @@ class CWS_Core_Etch {
 	 * @return array Modified options context.
 	 */
 	public function inject_options( array $options ) {
+		// REST API context: when the Etch builder fetches options data (?etch=magic loads a blank
+		// template shell; the builder then makes separate REST API calls to get dynamic data).
+		// In those REST API requests template_redirect never fires, so current_job is always null.
+		// Resolve the preview job inline here so {options.cws_job.*} works in the builder.
+		if ( null === $this->current_job && defined( 'REST_REQUEST' ) && REST_REQUEST && is_user_logged_in() ) {
+			$this->resolve_preview_job();
+		}
+
 		// Phase 2: inject single job only on /job/{id}/ URLs.
 		// This must run BEFORE the cws_jobs early-return so it is not bypassed
 		// when the admin has not configured any listing Job IDs.
@@ -134,6 +142,47 @@ class CWS_Core_Etch {
 	}
 
 	/**
+	 * Resolve and store the preview job for Etch builder context.
+	 *
+	 * Used both from handle_single_job (frontend ?etch=magic) and from inject_options
+	 * (REST API context where template_redirect does not fire).
+	 */
+	private function resolve_preview_job() {
+		$job_ids = $this->plugin->get_configured_job_ids();
+
+		// Use admin-configured preview job ID if set, fall back to first configured job.
+		$configured_preview = get_option( 'cws_core_preview_job_id', '' );
+		$preview_job_id     = ! empty( $configured_preview ) ? $configured_preview : ( ! empty( $job_ids ) ? reset( $job_ids ) : '' );
+
+		if ( empty( $preview_job_id ) ) {
+			$this->plugin->log( 'Etch preview: no configured job IDs — cws_job will be empty', 'info' );
+			return;
+		}
+
+		$raw_job = $this->plugin->api->get_job( $preview_job_id );
+		if ( $raw_job ) {
+			$this->current_job    = $this->plugin->api->format_job_data( $raw_job );
+			$this->current_job_id = $preview_job_id;
+			$this->plugin->log(
+				sprintf( 'Etch preview: injecting job %s as sample', $preview_job_id ),
+				'debug'
+			);
+		} elseif ( ! empty( $configured_preview ) && ! empty( $job_ids ) ) {
+			// Configured preview ID returned no data — fall back to first configured job.
+			$fallback_id = reset( $job_ids );
+			$raw_job     = $this->plugin->api->get_job( $fallback_id );
+			if ( $raw_job ) {
+				$this->current_job    = $this->plugin->api->format_job_data( $raw_job );
+				$this->current_job_id = $fallback_id;
+				$this->plugin->log(
+					sprintf( 'Etch preview: configured preview job %s failed — fell back to %s', $preview_job_id, $fallback_id ),
+					'info'
+				);
+			}
+		}
+	}
+
+	/**
 	 * Handle single job URL routing.
 	 *
 	 * Detects the cws_job_id query var, fetches the job from the API,
@@ -151,38 +200,7 @@ class CWS_Core_Etch {
 			'magic' === $_GET['etch'] &&
 			is_user_logged_in()
 		) {
-			$job_ids = $this->plugin->get_configured_job_ids();
-
-			// Use admin-configured preview job ID if set, fall back to first configured job.
-			$configured_preview = get_option( 'cws_core_preview_job_id', '' );
-			$preview_job_id     = ! empty( $configured_preview ) ? $configured_preview : ( ! empty( $job_ids ) ? reset( $job_ids ) : '' );
-
-			if ( empty( $preview_job_id ) ) {
-				$this->plugin->log( 'Etch preview: no configured job IDs — cws_job will be empty', 'info' );
-				return;
-			}
-
-			$raw_job = $this->plugin->api->get_job( $preview_job_id );
-			if ( $raw_job ) {
-				$this->current_job    = $this->plugin->api->format_job_data( $raw_job );
-				$this->current_job_id = $preview_job_id;
-				$this->plugin->log(
-					sprintf( 'Etch preview: injecting job %s as sample', $preview_job_id ),
-					'debug'
-				);
-			} elseif ( ! empty( $configured_preview ) && ! empty( $job_ids ) ) {
-				// Configured preview ID returned no data — fall back to first configured job.
-				$fallback_id = reset( $job_ids );
-				$raw_job     = $this->plugin->api->get_job( $fallback_id );
-				if ( $raw_job ) {
-					$this->current_job    = $this->plugin->api->format_job_data( $raw_job );
-					$this->current_job_id = $fallback_id;
-					$this->plugin->log(
-						sprintf( 'Etch preview: configured preview job %s failed — fell back to %s', $preview_job_id, $fallback_id ),
-						'info'
-					);
-				}
-			}
+			$this->resolve_preview_job();
 			return; // Do NOT swap $post/$wp_query for preview.
 		}
 
