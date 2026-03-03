@@ -24,7 +24,7 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 **Milestone Goal:** Give site editors visibility and control over API configuration — cache status, query params, field-based job groupings, and a configurable builder preview fallback.
 
 - [x] **Phase 5: Cache Status & Controls** - Admin can see cache health and clear it from the settings page (completed 2026-03-03)
-- [ ] **Phase 6: Query Parameters** - Admin can define key/value pairs appended to every API request
+- [x] **Phase 6: Query Parameters** - Admin can define key/value pairs appended to every API request (completed 2026-03-03)
 - [ ] **Phase 7: Field Groupings** - Admin can configure field-based groupings that auto-expose as Etch template variables
 - [ ] **Phase 8: Preview Fallback** - Admin can set a specific job ID as the Etch builder preview job
 
@@ -54,7 +54,7 @@ Plans:
   3. All configured query parameters appear in every outgoing API request URL
 **Plans**: 1 plan
 Plans:
-- [ ] 06-01-PLAN.md — Query params repeater UI + option registration + API URL injection
+- [x] 06-01-PLAN.md — Query params repeater UI + option registration + API URL injection
 
 ### Phase 7: Field Groupings
 **Goal**: Admin can define field-based groupings so that jobs are automatically exposed as grouped Etch template variables
@@ -85,6 +85,6 @@ Plans:
 | 3. Preview and Polish | v1.0 | 2/2 | Complete | 2026-03-02 |
 | 4. Integration Cleanup | v1.0 | 1/1 | Complete | 2026-03-02 |
 | 5. Cache Status & Controls | 2/2 | Complete   | 2026-03-03 | - |
-| 6. Query Parameters | v1.1 | 0/1 | Not started | - |
+| 6. Query Parameters | v1.1 | 1/1 | Complete | 2026-03-03 |
 | 7. Field Groupings | v1.1 | 0/TBD | Not started | - |
 | 8. Preview Fallback | v1.1 | 0/TBD | Not started | - |

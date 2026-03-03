@@ -15,9 +15,9 @@
 
 ### Query Parameters
 
-- [ ] **QUERY-01**: Admin can add query parameter key/value pairs via repeater fields in settings
-- [ ] **QUERY-02**: Admin can remove individual query parameter rows
-- [ ] **QUERY-03**: Plugin appends all configured query parameters to every API request
+- [x] **QUERY-01**: Admin can add query parameter key/value pairs via repeater fields in settings
+- [x] **QUERY-02**: Admin can remove individual query parameter rows
+- [x] **QUERY-03**: Plugin appends all configured query parameters to every API request
 
 ### Groupings
 
@@ -57,9 +57,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CACHE-02 | Phase 5 | Complete (05-01) |
 | CACHE-03 | Phase 5 | Complete (05-02) |
 | CACHE-04 | Phase 5 | Complete (05-01) |
-| QUERY-01 | Phase 6 | Pending |
-| QUERY-02 | Phase 6 | Pending |
-| QUERY-03 | Phase 6 | Pending |
+| QUERY-01 | Phase 6 | Complete (06-01) |
+| QUERY-02 | Phase 6 | Complete (06-01) |
+| QUERY-03 | Phase 6 | Complete (06-01) |
 | GROUP-01 | Phase 7 | Pending |
 | GROUP-02 | Phase 7 | Pending |
 | GROUP-03 | Phase 7 | Pending |
@@ -74,4 +74,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-03*
-*Last updated: 2026-03-03 after 05-02 completion (CACHE-01 through CACHE-04 complete — Phase 5 fully shipped)*
+*Last updated: 2026-03-03 after 06-01 completion (QUERY-01 through QUERY-03 complete — Phase 6 fully shipped)*
