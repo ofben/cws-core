@@ -151,8 +151,11 @@ class CWS_Core_Etch {
 			'magic' === $_GET['etch'] &&
 			is_user_logged_in()
 		) {
-			$job_ids        = $this->plugin->get_configured_job_ids();
-			$preview_job_id = ! empty( $job_ids ) ? reset( $job_ids ) : '';
+			$job_ids = $this->plugin->get_configured_job_ids();
+
+			// Use admin-configured preview job ID if set, fall back to first configured job.
+			$configured_preview = get_option( 'cws_core_preview_job_id', '' );
+			$preview_job_id     = ! empty( $configured_preview ) ? $configured_preview : ( ! empty( $job_ids ) ? reset( $job_ids ) : '' );
 
 			if ( empty( $preview_job_id ) ) {
 				$this->plugin->log( 'Etch preview: no configured job IDs — cws_job will be empty', 'info' );
@@ -167,6 +170,18 @@ class CWS_Core_Etch {
 					sprintf( 'Etch preview: injecting job %s as sample', $preview_job_id ),
 					'debug'
 				);
+			} elseif ( ! empty( $configured_preview ) && ! empty( $job_ids ) ) {
+				// Configured preview ID returned no data — fall back to first configured job.
+				$fallback_id = reset( $job_ids );
+				$raw_job     = $this->plugin->api->get_job( $fallback_id );
+				if ( $raw_job ) {
+					$this->current_job    = $this->plugin->api->format_job_data( $raw_job );
+					$this->current_job_id = $fallback_id;
+					$this->plugin->log(
+						sprintf( 'Etch preview: configured preview job %s failed — fell back to %s', $preview_job_id, $fallback_id ),
+						'info'
+					);
+				}
 			}
 			return; // Do NOT swap $post/$wp_query for preview.
 		}
