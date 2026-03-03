@@ -154,6 +154,16 @@ class CWS_Core_Admin {
             )
         );
 
+        register_setting(
+            'cws_core_settings',
+            'cws_core_query_params',
+            array(
+                'type'              => 'array',
+                'sanitize_callback' => array( $this, 'sanitize_query_params' ),
+                'default'           => array(),
+            )
+        );
+
         // Add settings sections
         add_settings_section(
             'cws_core_api_section',
@@ -196,6 +206,14 @@ class CWS_Core_Admin {
             'cws_core_organization_id',
             __( 'Organization ID', 'cws-core' ),
             array( $this, 'render_organization_id_field' ),
+            'cws-core-settings',
+            'cws_core_api_section'
+        );
+
+        add_settings_field(
+            'cws_core_query_params',
+            __( 'Query Parameters', 'cws-core' ),
+            array( $this, 'render_query_params_field' ),
             'cws-core-settings',
             'cws_core_api_section'
         );
@@ -424,6 +442,68 @@ class CWS_Core_Admin {
             <?php esc_html_e( 'Your organization ID (e.g., 1637)', 'cws-core' ); ?>
         </p>
         <?php
+    }
+
+    /**
+     * Render query parameters repeater field
+     */
+    public function render_query_params_field() {
+        $params = get_option( 'cws_core_query_params', array() );
+        if ( ! is_array( $params ) ) {
+            $params = array();
+        }
+
+        echo '<div id="cws-core-query-params-list">';
+
+        if ( empty( $params ) ) {
+            echo '<div class="cws-core-query-param-row" style="display:flex; gap:8px; margin-bottom:6px; align-items:center;">';
+            echo '<input type="text" name="cws_core_query_params[0][key]" value="" placeholder="' . esc_attr__( 'Key', 'cws-core' ) . '" class="regular-text" style="max-width:160px;" />';
+            echo '<input type="text" name="cws_core_query_params[0][value]" value="" placeholder="' . esc_attr__( 'Value', 'cws-core' ) . '" class="regular-text" style="max-width:200px;" />';
+            echo '<button type="button" class="button button-secondary cws-core-remove-query-param">' . esc_html__( 'Remove', 'cws-core' ) . '</button>';
+            echo '</div>';
+        } else {
+            $i = 0;
+            foreach ( $params as $param ) {
+                $key   = isset( $param['key'] ) ? $param['key'] : '';
+                $value = isset( $param['value'] ) ? $param['value'] : '';
+                echo '<div class="cws-core-query-param-row" style="display:flex; gap:8px; margin-bottom:6px; align-items:center;">';
+                echo '<input type="text" name="cws_core_query_params[' . $i . '][key]" value="' . esc_attr( $key ) . '" placeholder="' . esc_attr__( 'Key', 'cws-core' ) . '" class="regular-text" style="max-width:160px;" />';
+                echo '<input type="text" name="cws_core_query_params[' . $i . '][value]" value="' . esc_attr( $value ) . '" placeholder="' . esc_attr__( 'Value', 'cws-core' ) . '" class="regular-text" style="max-width:200px;" />';
+                echo '<button type="button" class="button button-secondary cws-core-remove-query-param">' . esc_html__( 'Remove', 'cws-core' ) . '</button>';
+                echo '</div>';
+                $i++;
+            }
+        }
+
+        echo '</div>';
+        echo '<button type="button" id="cws-core-add-query-param" class="button button-secondary">' . esc_html__( 'Add Parameter', 'cws-core' ) . '</button>';
+        echo '<p class="description">' . esc_html__( 'Key/value pairs appended to every outgoing API request as URL query parameters.', 'cws-core' ) . '</p>';
+    }
+
+    /**
+     * Sanitize query parameters repeater input
+     *
+     * @param mixed $value Raw input from the form.
+     * @return array Sanitized array of key/value pairs.
+     */
+    public function sanitize_query_params( $value ) {
+        if ( ! is_array( $value ) ) {
+            return array();
+        }
+
+        $cleaned = array();
+        foreach ( $value as $row ) {
+            $key = isset( $row['key'] ) ? sanitize_text_field( $row['key'] ) : '';
+            if ( '' === $key ) {
+                continue;
+            }
+            $cleaned[] = array(
+                'key'   => $key,
+                'value' => sanitize_text_field( isset( $row['value'] ) ? $row['value'] : '' ),
+            );
+        }
+
+        return array_values( $cleaned );
     }
 
     /**
