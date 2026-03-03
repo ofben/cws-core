@@ -93,37 +93,42 @@ class CWS_Core_Etch {
 			$this->plugin->log( 'API returned no jobs — cws_jobs is empty', 'info' );
 		}
 
-		// Grouped subsets — jobs pre-bucketed by category slug and city slug.
-		// Keys are sanitized slugs so "Product Management" becomes "product-management".
-		// Usage: {#loop options.cws_jobs_by_category.engineering as job}
-		//        {#loop options.cws_jobs_by_city.brooklyn as job}
-		$by_category = array();
-		$by_city     = array();
+		// Dynamic field groupings — builds cws_jobs_by_{field} for each admin-configured field name.
+		// Usage: {#loop options.cws_jobs_by_primary_category.engineering as job}
+		$field_groupings = get_option( 'cws_core_field_groupings', array() );
 
-		foreach ( $options['cws_jobs'] as $job ) {
-			$cat_key  = sanitize_title( $job['primary_category'] );
-			$city_key = sanitize_title( $job['primary_city'] );
+		if ( ! empty( $field_groupings ) && is_array( $field_groupings ) ) {
+			foreach ( $field_groupings as $field_name ) {
+				$field_name = sanitize_text_field( $field_name );
+				if ( '' === $field_name ) {
+					continue;
+				}
 
-			if ( '' !== $cat_key ) {
-				$by_category[ $cat_key ][] = $job;
-			}
+				$grouped    = array();
+				$option_key = 'cws_jobs_by_' . $field_name;
 
-			if ( '' !== $city_key ) {
-				$by_city[ $city_key ][] = $job;
+				foreach ( $options['cws_jobs'] as $job ) {
+					$raw_value = isset( $job[ $field_name ] ) ? $job[ $field_name ] : '';
+
+					// Only group by scalar string values — skip arrays/objects (e.g. location, permalink, raw_data).
+					if ( ! is_string( $raw_value ) && ! is_numeric( $raw_value ) ) {
+						continue;
+					}
+
+					$bucket_key = sanitize_title( (string) $raw_value );
+					if ( '' !== $bucket_key ) {
+						$grouped[ $bucket_key ][] = $job;
+					}
+				}
+
+				$options[ $option_key ] = $grouped;
+
+				$this->plugin->log(
+					sprintf( 'Grouped set cws_jobs_by_%s — %d buckets', $field_name, count( $grouped ) ),
+					'debug'
+				);
 			}
 		}
-
-		$options['cws_jobs_by_category'] = $by_category;
-		$options['cws_jobs_by_city']     = $by_city;
-
-		$this->plugin->log(
-			sprintf(
-				'Grouped sets — %d categories, %d cities',
-				count( $by_category ),
-				count( $by_city )
-			),
-			'debug'
-		);
 
 		return $options;
 	}
