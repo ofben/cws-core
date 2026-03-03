@@ -42,7 +42,7 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 **Plans**: 2 plans
 Plans:
 - [x] 05-01-PLAN.md — Record fetch metadata (timestamp + HTTP code) to persistent options
-- [ ] 05-02-PLAN.md — Render cache status in admin UI + JS reset on cache clear
+- [x] 05-02-PLAN.md — Render cache status in admin UI + JS reset on cache clear
 
 ### Phase 6: Query Parameters
 **Goal**: Admin can define key/value query parameter pairs in settings that are appended to every API request
