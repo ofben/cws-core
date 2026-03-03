@@ -5,7 +5,7 @@ milestone_name: Admin Tooling & Dynamic Groupings
 status: active
 last_updated: "2026-03-03T00:00:00.000Z"
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -18,18 +18,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Job data from the external API reliably available in any Etch template via `etch/dynamic_data/option` — survives Etch upgrades
-**Current focus:** v1.1 — Admin Tooling & Dynamic Groupings
+**Current focus:** v1.1 Phase 5 — Cache Status & Controls
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-03-03 — Milestone v1.1 started
+Phase: 5 of 8 (Cache Status & Controls)
+Plan: 0 of TBD in current phase
+Status: Ready to plan
+Last activity: 2026-03-03 — v1.1 roadmap created (Phases 5–8)
+
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
-**Velocity:**
+**Velocity (v1.0 baseline):**
 - Total plans completed: 8
 - Average duration: ~1.5 min
 - Total execution time: ~13 min
@@ -51,4 +53,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Milestone v1.0 archived. Ready for next milestone planning.
+Stopped at: Roadmap created. Phase 5 ready to plan.
+Resume file: None

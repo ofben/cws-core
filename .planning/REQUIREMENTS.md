@@ -53,25 +53,25 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CACHE-01 | — | Pending |
-| CACHE-02 | — | Pending |
-| CACHE-03 | — | Pending |
-| CACHE-04 | — | Pending |
-| QUERY-01 | — | Pending |
-| QUERY-02 | — | Pending |
-| QUERY-03 | — | Pending |
-| GROUP-01 | — | Pending |
-| GROUP-02 | — | Pending |
-| GROUP-03 | — | Pending |
-| PREV-01 | — | Pending |
-| PREV-02 | — | Pending |
-| PREV-03 | — | Pending |
+| CACHE-01 | Phase 5 | Pending |
+| CACHE-02 | Phase 5 | Pending |
+| CACHE-03 | Phase 5 | Pending |
+| CACHE-04 | Phase 5 | Pending |
+| QUERY-01 | Phase 6 | Pending |
+| QUERY-02 | Phase 6 | Pending |
+| QUERY-03 | Phase 6 | Pending |
+| GROUP-01 | Phase 7 | Pending |
+| GROUP-02 | Phase 7 | Pending |
+| GROUP-03 | Phase 7 | Pending |
+| PREV-01 | Phase 8 | Pending |
+| PREV-02 | Phase 8 | Pending |
+| PREV-03 | Phase 8 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 13 total
-- Mapped to phases: 0
-- Unmapped: 13 ⚠️
+- Mapped to phases: 13
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-03-03*
-*Last updated: 2026-03-03 after initial definition*
+*Last updated: 2026-03-03 after roadmap creation (Phases 5–8)*
