@@ -97,6 +97,20 @@ class CWS_Core_API {
             $endpoint
         );
 
+        // Append admin-configured query parameters
+        $extra_params = get_option( 'cws_core_query_params', array() );
+        if ( ! empty( $extra_params ) && is_array( $extra_params ) ) {
+            foreach ( $extra_params as $param ) {
+                if ( ! empty( $param['key'] ) ) {
+                    $url = add_query_arg(
+                        sanitize_key( $param['key'] ),
+                        isset( $param['value'] ) ? urlencode( $param['value'] ) : '',
+                        $url
+                    );
+                }
+            }
+        }
+
         if ( $this->plugin ) {
             $this->plugin->log( sprintf( 'Built API URL: %s', $url ), 'debug' );
         }
