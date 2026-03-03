@@ -48,6 +48,13 @@ class CWS_Core {
     public $public = null;
 
     /**
+     * Etch integration class instance
+     *
+     * @var CWS_Core_Etch
+     */
+    public $etch = null;
+
+    /**
      * Get plugin instance
      *
      * @return CWS_Core
@@ -90,9 +97,9 @@ class CWS_Core {
                 error_log( 'CWS Core: Admin class not instantiated. is_admin: ' . (is_admin() ? 'true' : 'false') . ', class_exists: ' . (class_exists( 'CWS_Core\\CWS_Core_Admin' ) ? 'true' : 'false') );
             }
 
-            // Initialize public class
-            if ( class_exists( 'CWS_Core\\CWS_Core_Public' ) ) {
-                $this->public = new CWS_Core_Public( $this );
+            // Initialize Etch integration class
+            if ( class_exists( 'CWS_Core\\CWS_Core_Etch' ) ) {
+                $this->etch = new CWS_Core_Etch( $this );
             }
         } catch ( Exception $e ) {
             // Log error but don't crash the plugin
@@ -121,10 +128,6 @@ class CWS_Core {
             if ( $this->cache && method_exists( $this->cache, 'init' ) ) {
                 $this->cache->init();
             }
-            if ( $this->public && method_exists( $this->public, 'init' ) ) {
-                $this->public->init();
-            }
-
             if ( is_admin() && $this->admin && method_exists( $this->admin, 'init' ) ) {
                 $this->admin->init();
                 error_log( 'CWS Core: Admin init() called successfully' );
@@ -132,6 +135,11 @@ class CWS_Core {
                 $admin_exists = $this->admin ? 'true' : 'false';
                 $method_exists = $this->admin ? (method_exists( $this->admin, 'init' ) ? 'true' : 'false') : 'false';
                 error_log( 'CWS Core: Admin init() not called. is_admin: ' . (is_admin() ? 'true' : 'false') . ', admin exists: ' . $admin_exists . ', method_exists: ' . $method_exists );
+            }
+
+            // Initialize Etch integration
+            if ( $this->etch && method_exists( $this->etch, 'init' ) ) {
+                $this->etch->init();
             }
         } catch ( Exception $e ) {
             // Log error but don't crash the plugin
@@ -151,9 +159,6 @@ class CWS_Core {
 
         // Add query vars
         add_filter( 'query_vars', array( $this, 'add_query_vars' ) );
-
-        // Handle job requests
-        add_action( 'template_redirect', array( $this, 'handle_job_request' ) );
     }
 
     /**
@@ -190,40 +195,12 @@ class CWS_Core {
     }
 
     /**
-     * Handle job requests
+     * Handle job requests.
+     *
+     * @deprecated Phase 2 — routing is handled by CWS_Core_Etch::handle_single_job().
      */
     public function handle_job_request() {
-        $job_id = get_query_var( 'cws_job_id' );
-        
-        if ( ! empty( $job_id ) ) {
-            // Set up the job page template
-            add_filter( 'template_include', array( $this, 'load_job_template' ) );
-        }
-    }
-
-    /**
-     * Load job template
-     *
-     * @param string $template Template path.
-     * @return string
-     */
-    public function load_job_template( $template ) {
-        // Check if we have a job ID
-        $job_id = get_query_var( 'cws_job_id' );
-        
-        if ( ! empty( $job_id ) ) {
-            // Look for a custom job template in the theme
-            $job_template = locate_template( array( 'job.php', 'single-job.php' ) );
-            
-            if ( $job_template ) {
-                return $job_template;
-            }
-            
-            // Fall back to default template
-            return CWS_CORE_PLUGIN_DIR . 'templates/job.php';
-        }
-        
-        return $template;
+        // Deprecated: routing moved to CWS_Core_Etch::handle_single_job() in Phase 2.
     }
 
     /**
@@ -275,5 +252,154 @@ class CWS_Core {
         if ( $this->get_option( 'debug_mode', false ) ) {
             error_log( sprintf( '[CWS Core] [%s] %s', strtoupper( $level ), $message ) );
         }
+    }
+
+    /**
+     * Get configured job IDs from settings
+     *
+     * @return array Array of job IDs.
+     */
+    public function get_configured_job_ids() {
+        $job_ids_string = $this->get_option( 'job_ids', '22026695' );
+        $job_ids = array_map( 'trim', explode( ',', $job_ids_string ) );
+        return array_filter( $job_ids, 'is_numeric' );
+    }
+
+    /**
+     * Fetch and cache a single job by ID
+     *
+     * @param string $job_id The job ID to fetch.
+     * @return bool True if successful, false otherwise.
+     */
+    public function fetch_and_cache_job( $job_id ) {
+        if ( ! $this->api ) {
+            $this->log( 'API not available for fetching job: ' . $job_id, 'error' );
+            return false;
+        }
+
+        // Fetch job data from API
+        $job_data = $this->api->get_job( $job_id );
+        
+        if ( false === $job_data ) {
+            $this->log( 'Failed to fetch job data from API for job: ' . $job_id, 'error' );
+            return false;
+        }
+
+        // Cache the job data
+        if ( $this->cache ) {
+            $cache_key = 'job_data_' . $job_id;
+            $this->cache->set( $cache_key, $job_data );
+            $this->log( 'Cached job data for job: ' . $job_id, 'info' );
+        }
+
+        return true;
+    }
+
+    /**
+     * Add a job ID to the discovered job IDs list
+     *
+     * @param string $job_id The job ID to add.
+     * @return bool True if successful, false otherwise.
+     */
+    public function add_job_id_to_discovered_list( $job_id ) {
+        if ( ! $this->cache ) {
+            $this->log( 'Cache not available for storing discovered job ID: ' . $job_id, 'error' );
+            return false;
+        }
+
+        // Get current discovered job IDs
+        $discovered_job_ids = $this->cache->get( 'discovered_job_ids' );
+        if ( ! is_array( $discovered_job_ids ) ) {
+            $discovered_job_ids = array();
+        }
+
+        // Add the new job ID if it's not already there
+        if ( ! in_array( $job_id, $discovered_job_ids ) ) {
+            $discovered_job_ids[] = $job_id;
+            $this->cache->set( 'discovered_job_ids', $discovered_job_ids );
+            $this->log( 'Added job ID ' . $job_id . ' to discovered list', 'info' );
+            return true;
+        }
+
+        return true; // Already exists
+    }
+
+    /**
+     * Add a job ID to the configured job IDs list
+     *
+     * @param string $job_id The job ID to add.
+     * @return bool True if successful, false otherwise.
+     */
+    public function add_job_id_to_configured_list( $job_id ) {
+        $current_job_ids = $this->get_configured_job_ids();
+        
+        // Check if job ID is already in the list
+        if ( in_array( $job_id, $current_job_ids ) ) {
+            return true; // Already exists
+        }
+
+        // Add the new job ID
+        $current_job_ids[] = $job_id;
+        
+        // Update the option
+        $job_ids_string = implode( ',', $current_job_ids );
+        $result = $this->update_option( 'job_ids', $job_ids_string );
+        
+        if ( $result ) {
+            $this->log( 'Added job ID ' . $job_id . ' to configured list. New list: ' . $job_ids_string, 'info' );
+        } else {
+            $this->log( 'Failed to update configured job IDs list', 'error' );
+        }
+
+        return $result;
+    }
+
+    /**
+     * Remove a job ID from the configured job IDs list
+     *
+     * @param string $job_id The job ID to remove.
+     * @return bool True if successful, false otherwise.
+     */
+    public function remove_job_id_from_configured_list( $job_id ) {
+        $current_job_ids = $this->get_configured_job_ids();
+        
+        // Remove the job ID
+        $updated_job_ids = array_diff( $current_job_ids, array( $job_id ) );
+        
+        // Update the option
+        $job_ids_string = implode( ',', $updated_job_ids );
+        $result = $this->update_option( 'job_ids', $job_ids_string );
+        
+        if ( $result ) {
+            $this->log( 'Removed job ID ' . $job_id . ' from configured list. New list: ' . $job_ids_string, 'info' );
+        } else {
+            $this->log( 'Failed to update configured job IDs list', 'error' );
+        }
+
+        return $result;
+    }
+
+    /**
+     * Get all cached job IDs (both configured and dynamically discovered)
+     *
+     * @return array Array of job IDs that have cached data.
+     */
+    public function get_cached_job_ids() {
+        if ( ! $this->cache ) {
+            return array();
+        }
+
+        $cached_job_ids = array();
+        $configured_job_ids = $this->get_configured_job_ids();
+        
+        // Check which configured job IDs have cached data
+        foreach ( $configured_job_ids as $job_id ) {
+            $cache_key = 'job_data_' . $job_id;
+            if ( $this->cache->get( $cache_key ) !== false ) {
+                $cached_job_ids[] = $job_id;
+            }
+        }
+
+        return $cached_job_ids;
     }
 }

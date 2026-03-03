@@ -38,7 +38,7 @@ require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core.php';
 require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-api.php';
 require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-cache.php';
 require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-admin.php';
-require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-public.php';
+require_once CWS_CORE_PLUGIN_DIR . 'includes/class-cws-core-etch.php';
 
 // Initialize the plugin
 function cws_core_init() {
@@ -58,6 +58,11 @@ function cws_core_init() {
         error_log( 'CWS Core: Plugin instance created, calling init()' );
         $plugin->init();
         
+        // Set global variable for external access
+        global $cws_core;
+        $cws_core = $plugin;
+        error_log( 'CWS Core: Global variable $cws_core set' );
+        
         error_log( 'CWS Core: Plugin initialization completed successfully' );
     } catch ( Exception $e ) {
         // Log error but don't crash the plugin
@@ -74,7 +79,8 @@ function cws_core_activate() {
         add_option( 'cws_core_organization_id', '' );
         add_option( 'cws_core_cache_duration', 3600 ); // 1 hour default
         add_option( 'cws_core_debug_mode', false );
-        
+        add_option( 'cws_core_job_template_page_id', 0 );
+
         // Flush rewrite rules for custom endpoints
         flush_rewrite_rules();
     } catch ( Exception $e ) {

@@ -57,7 +57,10 @@ class CWS_Core_Admin {
         
         // Add AJAX handlers
         add_action( 'wp_ajax_cws_core_flush_rules', array( $this, 'flush_rewrite_rules_ajax' ) );
-        
+
+        // Flush rewrite rules automatically when the job slug changes.
+        add_action( 'update_option_cws_core_job_slug', array( $this, 'flush_rules_on_slug_change' ), 10, 3 );
+
         error_log( 'CWS Core: Admin hooks registered successfully' );
     }
 
@@ -131,6 +134,26 @@ class CWS_Core_Admin {
             )
         );
 
+        register_setting(
+            'cws_core_settings',
+            'cws_core_job_ids',
+            array(
+                'type'              => 'string',
+                'sanitize_callback' => array( $this, 'sanitize_job_ids' ),
+                'default'           => '22026695',
+            )
+        );
+
+        register_setting(
+            'cws_core_settings',
+            'cws_core_job_template_page_id',
+            array(
+                'type'              => 'integer',
+                'sanitize_callback' => 'absint',
+                'default'           => 0,
+            )
+        );
+
         // Add settings sections
         add_settings_section(
             'cws_core_api_section',
@@ -186,6 +209,22 @@ class CWS_Core_Admin {
         );
 
         add_settings_field(
+            'cws_core_job_ids',
+            __( 'Job IDs', 'cws-core' ),
+            array( $this, 'render_job_ids_field' ),
+            'cws-core-settings',
+            'cws_core_url_section'
+        );
+
+        add_settings_field(
+            'cws_core_job_template_page_id',
+            __( 'Job Template Page', 'cws-core' ),
+            array( $this, 'render_job_template_page_field' ),
+            'cws-core-settings',
+            'cws_core_url_section'
+        );
+
+        add_settings_field(
             'cws_core_cache_duration',
             __( 'Cache Duration', 'cws-core' ),
             array( $this, 'render_cache_duration_field' ),
@@ -234,10 +273,10 @@ class CWS_Core_Admin {
             array(
                 'ajax_url' => admin_url( 'admin-ajax.php' ),
                 'nonces'   => array(
-                    'test_api'     => wp_create_nonce( 'cws_core_test_api' ),
-                    'clear_cache'  => wp_create_nonce( 'cws_core_clear_cache' ),
-                    'cache_stats'  => wp_create_nonce( 'cws_core_get_cache_stats' ),
-                    'flush_rules'  => wp_create_nonce( 'cws_core_flush_rules' ),
+                    'test_api'    => wp_create_nonce( 'cws_core_test_api' ),
+                    'clear_cache' => wp_create_nonce( 'cws_core_clear_cache' ),
+                    'cache_stats' => wp_create_nonce( 'cws_core_get_cache_stats' ),
+                    'flush_rules' => wp_create_nonce( 'cws_core_flush_rules' ),
                 ),
                 'strings'  => array(
                     'testing_connection' => __( 'Testing connection...', 'cws-core' ),
@@ -314,6 +353,7 @@ class CWS_Core_Admin {
                         <br><br>
                         <code><?php echo esc_url( home_url( '/' . $job_slug . '/22026695/job-title-slug/' ) ); ?></code>
                     </div>
+                    
                 </div>
             </div>
         </div>
@@ -400,6 +440,67 @@ class CWS_Core_Admin {
             <?php esc_html_e( 'The base slug for job URLs (e.g., "job" will create URLs like /job/123/)', 'cws-core' ); ?>
         </p>
         <?php
+    }
+
+    /**
+     * Render job IDs field
+     */
+    public function render_job_ids_field() {
+        $value = get_option( 'cws_core_job_ids', '22026695' );
+        ?>
+        <textarea 
+            id="cws_core_job_ids" 
+            name="cws_core_job_ids" 
+            rows="3" 
+            cols="50"
+            placeholder="22026695, 22026696, 22026697"
+        ><?php echo esc_textarea( $value ); ?></textarea>
+        <p class="description">
+            <?php esc_html_e( 'Enter job IDs separated by commas. These will be available for EtchWP queries.', 'cws-core' ); ?>
+        </p>
+        <?php
+    }
+
+    /**
+     * Render job template page field.
+     *
+     * Displays a dropdown of published WP pages and an inline health check warning
+     * when no valid page is selected. Warning appears only on this settings page
+     * (not via admin_notices).
+     */
+    public function render_job_template_page_field() {
+        $value = (int) get_option( 'cws_core_job_template_page_id', 0 );
+        $pages = get_pages( array(
+            'post_status' => 'publish',
+            'sort_column' => 'post_title',
+            'sort_order'  => 'ASC',
+        ) );
+        ?>
+        <select id="cws_core_job_template_page_id" name="cws_core_job_template_page_id">
+            <option value="0"><?php esc_html_e( '— Select a page —', 'cws-core' ); ?></option>
+            <?php foreach ( $pages as $page ) : ?>
+                <option value="<?php echo esc_attr( $page->ID ); ?>" <?php selected( $value, $page->ID ); ?>>
+                    <?php echo esc_html( $page->post_title ); ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <p class="description">
+            <?php esc_html_e( 'The WordPress page that contains the Etch job detail template. This page is used as the template when visiting /job/{id}/ URLs.', 'cws-core' ); ?>
+        </p>
+        <?php
+        // Inline health check — only visible on this settings page, not via admin_notices.
+        if ( 0 === $value ) {
+            echo '<p class="description" style="color:#d63638;">'
+                . esc_html__( 'Warning: No job template page selected. Single job URLs (/job/{id}/) will not load correctly.', 'cws-core' )
+                . '</p>';
+        } else {
+            $page = get_post( $value );
+            if ( ! $page || 'publish' !== $page->post_status ) {
+                echo '<p class="description" style="color:#d63638;">'
+                    . esc_html__( 'Warning: The selected page does not exist or is not published. Single job URLs will not load correctly.', 'cws-core' )
+                    . '</p>';
+            }
+        }
     }
 
     /**
@@ -547,6 +648,18 @@ class CWS_Core_Admin {
     }
 
     /**
+     * Sanitize job IDs
+     *
+     * @param string $value Job IDs value.
+     * @return string Sanitized value.
+     */
+    public function sanitize_job_ids( $value ) {
+        $job_ids = array_map( 'trim', explode( ',', $value ) );
+        $job_ids = array_filter( $job_ids, 'is_numeric' ); // Only allow numeric IDs
+        return implode( ',', $job_ids );
+    }
+
+    /**
      * Flush rewrite rules via AJAX
      */
     public function flush_rewrite_rules_ajax() {
@@ -567,4 +680,26 @@ class CWS_Core_Admin {
             'message' => __( 'Rewrite rules flushed successfully! Job URLs should now work correctly.', 'cws-core' ),
         ) );
     }
+
+    /**
+     * Flush rewrite rules when the job slug option changes.
+     *
+     * Fires on the update_option_cws_core_job_slug action hook, which passes
+     * old value, new value, and option name. Only flushes if the value changed.
+     *
+     * @param mixed  $old_value The old option value.
+     * @param mixed  $new_value The new option value.
+     * @param string $option    The option name.
+     */
+    public function flush_rules_on_slug_change( $old_value, $new_value, $option ) {
+        if ( $old_value !== $new_value ) {
+            flush_rewrite_rules();
+            $this->plugin->log(
+                sprintf( 'Job slug changed from "%s" to "%s" — rewrite rules flushed', $old_value, $new_value ),
+                'info'
+            );
+        }
+    }
+
 }
+

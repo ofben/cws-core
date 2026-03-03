@@ -142,6 +142,16 @@ class CWS_Core_Cache {
             $this->plugin->log( 'Clearing all plugin cache', 'info' );
         }
 
+        // Audit: per-job transient key path:
+        //   CWS_Core_API::fetch_job_data() builds key: 'job_data_' . md5( $url )
+        //   CWS_Core_Cache::set() prepends $prefix ('cws_core_'): 'cws_core_job_data_{md5}'
+        //   WordPress stores as: '_transient_cws_core_job_data_{md5}'
+        //   LIKE '_transient_cws_core_%' matches — per-job keys are covered by this delete.
+        //
+        // Note: On hosts with a persistent object cache (Redis, Memcached), transients are
+        // stored in memory, not wp_options. The SQL delete above misses those entries.
+        // The wp_cache_flush call below adds coverage for object cache backends.
+
         // Delete all transients with our prefix
         $deleted = $wpdb->query(
             $wpdb->prepare(
@@ -150,6 +160,12 @@ class CWS_Core_Cache {
                 '_transient_timeout_' . $this->prefix . '%'
             )
         );
+
+        // Flush object cache group for transients (covers Redis/Memcached backends).
+        // wp_cache_flush_group() is a no-op on sites without a persistent object cache.
+        if ( function_exists( 'wp_cache_flush_group' ) ) {
+            wp_cache_flush_group( 'transient' );
+        }
 
         if ( $this->plugin ) {
             $this->plugin->log( sprintf( 'Cleared %d cache entries', $deleted ), 'info' );
