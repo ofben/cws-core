@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 Dynamic Data Rebuild** — Phases 1–4 (shipped 2026-03-03)
-- 🚧 **v1.1 Admin Tooling & Dynamic Groupings** — Phases 5–8 (in progress)
+- ✅ **v1.1 Admin Tooling & Dynamic Groupings** — Phases 5–8 (shipped 2026-03-03)
 
 ## Phases
 
@@ -19,14 +19,14 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 
 </details>
 
-### 🚧 v1.1 Admin Tooling & Dynamic Groupings (In Progress)
+### ✅ v1.1 Admin Tooling & Dynamic Groupings (SHIPPED 2026-03-03)
 
 **Milestone Goal:** Give site editors visibility and control over API configuration — cache status, query params, field-based job groupings, and a configurable builder preview fallback.
 
 - [x] **Phase 5: Cache Status & Controls** - Admin can see cache health and clear it from the settings page (completed 2026-03-03)
 - [x] **Phase 6: Query Parameters** - Admin can define key/value pairs appended to every API request (completed 2026-03-03)
 - [x] **Phase 7: Field Groupings** - Admin can configure field-based groupings that auto-expose as Etch template variables (completed 2026-03-03)
-- [ ] **Phase 8: Preview Fallback** - Admin can set a specific job ID as the Etch builder preview job
+- [x] **Phase 8: Preview Fallback** - Admin can set a specific job ID as the Etch builder preview job (completed 2026-03-03)
 
 ## Phase Details
 
@@ -78,7 +78,7 @@ Plans:
   3. When no preview job ID is configured, the plugin falls back to the first job in the jobs list (existing behavior preserved)
 **Plans**: 1 plan
 Plans:
-- [ ] 08-01-PLAN.md — Preview job ID settings field + Etch preview block update
+- [x] 08-01-PLAN.md — Preview job ID settings field + Etch preview block update
 
 ## Progress
 
@@ -91,4 +91,4 @@ Plans:
 | 5. Cache Status & Controls | 2/2 | Complete   | 2026-03-03 | - |
 | 6. Query Parameters | v1.1 | 1/1 | Complete | 2026-03-03 |
 | 7. Field Groupings | v1.1 | 1/1 | Complete | 2026-03-03 |
-| 8. Preview Fallback | v1.1 | 0/TBD | Not started | - |
+| 8. Preview Fallback | v1.1 | 1/1 | Complete | 2026-03-03 |
