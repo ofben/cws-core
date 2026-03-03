@@ -23,7 +23,7 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 
 **Milestone Goal:** Give site editors visibility and control over API configuration — cache status, query params, field-based job groupings, and a configurable builder preview fallback.
 
-- [ ] **Phase 5: Cache Status & Controls** - Admin can see cache health and clear it from the settings page
+- [x] **Phase 5: Cache Status & Controls** - Admin can see cache health and clear it from the settings page (completed 2026-03-03)
 - [ ] **Phase 6: Query Parameters** - Admin can define key/value pairs appended to every API request
 - [ ] **Phase 7: Field Groupings** - Admin can configure field-based groupings that auto-expose as Etch template variables
 - [ ] **Phase 8: Preview Fallback** - Admin can set a specific job ID as the Etch builder preview job
@@ -82,7 +82,7 @@ Plans:
 | 2. Single Job Routing | v1.0 | 3/3 | Complete | 2026-03-01 |
 | 3. Preview and Polish | v1.0 | 2/2 | Complete | 2026-03-02 |
 | 4. Integration Cleanup | v1.0 | 1/1 | Complete | 2026-03-02 |
-| 5. Cache Status & Controls | v1.1 | 1/2 | In progress | - |
+| 5. Cache Status & Controls | 2/2 | Complete   | 2026-03-03 | - |
 | 6. Query Parameters | v1.1 | 0/TBD | Not started | - |
 | 7. Field Groupings | v1.1 | 0/TBD | Not started | - |
 | 8. Preview Fallback | v1.1 | 0/TBD | Not started | - |
