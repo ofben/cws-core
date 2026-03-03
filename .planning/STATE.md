@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Admin Tooling & Dynamic Groupings
-status: complete
-last_updated: "2026-03-03T00:00:00.000Z"
+milestone: v1.2
+milestone_name: Phases
+status: unknown
+last_updated: "2026-03-03T20:17:21.045Z"
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 5
-  completed_plans: 5
+  total_phases: 1
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
 ---
 
 # Project State
@@ -18,17 +18,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03 after v1.1 milestone)
 
 **Core value:** Job data from the external API reliably available in any Etch template via `etch/dynamic_data/option` — survives Etch upgrades
-**Current focus:** Planning next milestone — run `/gsd:new-milestone`
+**Current focus:** Phase 09 (tech-debt-cleanup) complete — phase 09-01 shipped
 
 ## Current Position
 
-Milestone v1.1 complete and archived. All 4 phases (5–8), 5 plans shipped and tagged.
+Phase 09, Plan 01 complete (09-01-PLAN.md).
+Phase 09 is the only phase in this milestone — milestone v1.2 is complete.
 
 ## Accumulated Context
 
 ### Decisions
 
-All milestone decisions captured in PROJECT.md Key Decisions table.
+- Sentinel value `0` for `cws_core_last_fetch_status` on failure — not a valid HTTP code, distinct from null, already handled gracefully by `render_cache_status_block()`
+- No PHP-side change needed for testVirtualCPT removal — AJAX action was never registered server-side
+- [Phase 09]: Sentinel value 0 for cws_core_last_fetch_status on failure — not a valid HTTP code, distinct from null
+- [Phase 09]: No PHP-side change needed for testVirtualCPT removal — AJAX action was never registered server-side
 
 ### Pending Todos
 
@@ -36,13 +40,10 @@ None.
 
 ### Blockers/Concerns
 
-Tech debt carried forward to v1.2:
-- `fetch_job_data()` does not write status metadata on JSON parse failure or invalid response structure paths
-- `uninstall.php` missing cleanup for all 5 v1.1 wp_options
-- Dead `testVirtualCPT` JS method in admin.js (pre-v1.0 legacy)
+None — all v1.1 tech-debt items resolved in phase 09-01.
 
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: v1.1 milestone archived and tagged
+Stopped at: Completed 09-01-PLAN.md
 Resume file: None

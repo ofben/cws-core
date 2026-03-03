@@ -4,7 +4,7 @@
 
 - ✅ **v1.0 Dynamic Data Rebuild** — Phases 1–4 (shipped 2026-03-03)
 - ✅ **v1.1 Admin Tooling & Dynamic Groupings** — Phases 5–8 (shipped 2026-03-03)
-- 🔧 **v1.2 Tech Debt & Stability** — Phases 9+ (in planning)
+- ✅ **v1.2 Tech Debt & Stability** — Phases 9 (shipped 2026-03-03)
 
 ## Phases
 
@@ -37,10 +37,10 @@ Full details: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 ### Phase 9: Tech Debt Cleanup
 **Goal:** Close v1.1 audit gaps and remove accumulated dead code
 **Gap Closure:** Closes GAP-1 and GAP-2 from v1.1-MILESTONE-AUDIT.md
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] 09-01-PLAN.md — Fix error-path status writes, uninstall cleanup, remove dead JS
+- [x] 09-01-PLAN.md — Fix error-path status writes, uninstall cleanup, remove dead JS
 
 ---
 
@@ -56,4 +56,4 @@ Plans:
 | 6. Query Parameters | v1.1 | 1/1 | Complete | 2026-03-03 |
 | 7. Field Groupings | v1.1 | 1/1 | Complete | 2026-03-03 |
 | 8. Preview Fallback | v1.1 | 1/1 | Complete | 2026-03-03 |
-| 9. Tech Debt Cleanup | v1.2 | 0/1 | Pending | — |
+| 9. Tech Debt Cleanup | 1/1 | Complete   | 2026-03-03 | 2026-03-03 |
