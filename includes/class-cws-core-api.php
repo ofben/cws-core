@@ -137,6 +137,8 @@ class CWS_Core_API {
             if ( $this->plugin ) {
                 $this->plugin->log( sprintf( 'API request failed: %s', $response->get_error_message() ), 'error' );
             }
+            update_option( 'cws_core_last_fetch_time', time() );
+            update_option( 'cws_core_last_fetch_status', 0 );
             return false;
         }
 
@@ -147,6 +149,8 @@ class CWS_Core_API {
             if ( $this->plugin ) {
                 $this->plugin->log( sprintf( 'API returned error code %d: %s', $response_code, $response_body ), 'error' );
             }
+            update_option( 'cws_core_last_fetch_time', time() );
+            update_option( 'cws_core_last_fetch_status', intval( $response_code ) );
             return false;
         }
 
@@ -173,6 +177,9 @@ class CWS_Core_API {
             $cache_key = 'job_data_' . md5( $url );
             $this->plugin->cache->set( $cache_key, $data );
         }
+
+        update_option( 'cws_core_last_fetch_time', time() );
+        update_option( 'cws_core_last_fetch_status', 200 );
 
         if ( $this->plugin ) {
             $job_count = is_array( $job_ids ) ? count( $job_ids ) : 1;
