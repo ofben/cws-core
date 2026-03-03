@@ -175,6 +175,8 @@ class CWS_Core_API {
             if ( $this->plugin ) {
                 $this->plugin->log( sprintf( 'Failed to parse JSON response: %s', json_last_error_msg() ), 'error' );
             }
+            update_option( 'cws_core_last_fetch_time', time() );
+            update_option( 'cws_core_last_fetch_status', 0 );
             return false;
         }
 
@@ -183,6 +185,8 @@ class CWS_Core_API {
             if ( $this->plugin ) {
                 $this->plugin->log( 'Invalid API response structure', 'error' );
             }
+            update_option( 'cws_core_last_fetch_time', time() );
+            update_option( 'cws_core_last_fetch_status', 0 );
             return false;
         }
 
