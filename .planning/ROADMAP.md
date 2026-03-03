@@ -76,7 +76,9 @@ Plans:
   1. Admin can enter a specific job ID as the Etch builder preview fallback in the settings page
   2. When `?etch=magic` is active and no real job ID is in the URL, the plugin uses the admin-configured preview job ID
   3. When no preview job ID is configured, the plugin falls back to the first job in the jobs list (existing behavior preserved)
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 08-01-PLAN.md — Preview job ID settings field + Etch preview block update
 
 ## Progress
 
