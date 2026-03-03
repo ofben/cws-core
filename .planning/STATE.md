@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Admin Tooling & Dynamic Groupings
-status: unknown
-last_updated: "2026-03-03T12:20:04.393Z"
+status: in-progress
+last_updated: "2026-03-03T12:45:45Z"
 progress:
   total_phases: 2
   completed_phases: 2
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 4
+  completed_plans: 4
 ---
 
 # Project State
@@ -18,23 +18,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Job data from the external API reliably available in any Etch template via `etch/dynamic_data/option` — survives Etch upgrades
-**Current focus:** v1.1 Phase 6 — Query Parameters
+**Current focus:** v1.1 Phase 7 — Field Groupings
 
 ## Current Position
 
-Phase: 6 of 8 (Query Parameters)
+Phase: 7 of 8 (Field Groupings)
 Plan: 1 of 1 in current phase (complete)
-Status: Phase 6 Plan 1 complete
-Last activity: 2026-03-03 — 06-01 complete, QUERY-01 through QUERY-03 requirements satisfied
+Status: Phase 7 Plan 1 complete
+Last activity: 2026-03-03 — 07-01 complete, GROUP-01 through GROUP-03 requirements satisfied
 
-Progress: [##########] Phase 6 Plan 1 complete (1/1 plans)
+Progress: [##########] Phase 7 Plan 1 complete (1/1 plans)
 
 ## Performance Metrics
 
 **Velocity (v1.0 baseline):**
-- Total plans completed: 8
+- Total plans completed: 9
 - Average duration: ~1.5 min
-- Total execution time: ~13 min
+- Total execution time: ~15 min
 
 ## Accumulated Context
 
@@ -49,6 +49,9 @@ All milestone decisions captured in PROJECT.md Key Decisions table.
 - [06-01] Repeater uses indexed name attributes (cws_core_query_params[N][key]) — native PHP array, no json_encode needed
 - [06-01] sanitize_key() on keys + urlencode() on values in build_api_url() — safe URL construction
 - [06-01] sanitize_query_params() strips entries with empty key — empty keys never stored or appended to URLs
+- [07-01] No fallback auto-creation of cws_jobs_by_category or cws_jobs_by_city — admins must explicitly configure field names
+- [07-01] Flat array of strings for cws_core_field_groupings — field names are atomic, no value component needed
+- [07-01] Non-scalar field values silently skipped via is_string/is_numeric guard — prevents PHP warnings on array fields
 
 ### Pending Todos
 
@@ -61,5 +64,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 06-01-PLAN.md — Phase 6 query parameters feature complete
+Stopped at: Completed 07-01-PLAN.md — Phase 7 field groupings feature complete
 Resume file: None

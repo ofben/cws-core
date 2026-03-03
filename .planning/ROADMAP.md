@@ -25,7 +25,7 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 
 - [x] **Phase 5: Cache Status & Controls** - Admin can see cache health and clear it from the settings page (completed 2026-03-03)
 - [x] **Phase 6: Query Parameters** - Admin can define key/value pairs appended to every API request (completed 2026-03-03)
-- [ ] **Phase 7: Field Groupings** - Admin can configure field-based groupings that auto-expose as Etch template variables
+- [x] **Phase 7: Field Groupings** - Admin can configure field-based groupings that auto-expose as Etch template variables (completed 2026-03-03)
 - [ ] **Phase 8: Preview Fallback** - Admin can set a specific job ID as the Etch builder preview job
 
 ## Phase Details
@@ -64,7 +64,9 @@ Plans:
   1. Admin can add a field name as a grouping source (e.g. "category") via the settings page
   2. Admin can remove a configured grouping from the settings page
   3. Each configured grouping results in a usable `{options.cws_jobs_by_{field}}` variable in Etch templates, keyed by unique field values with arrays of matching jobs as values
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [x] 07-01-PLAN.md — Field groupings repeater UI + option registration + dynamic inject_options() loop
 
 ### Phase 8: Preview Fallback
 **Goal**: Admin can set a specific job ID as the Etch builder preview fallback, with graceful fallback to existing behavior when none is configured
@@ -86,5 +88,5 @@ Plans:
 | 4. Integration Cleanup | v1.0 | 1/1 | Complete | 2026-03-02 |
 | 5. Cache Status & Controls | 2/2 | Complete   | 2026-03-03 | - |
 | 6. Query Parameters | v1.1 | 1/1 | Complete | 2026-03-03 |
-| 7. Field Groupings | v1.1 | 0/TBD | Not started | - |
+| 7. Field Groupings | v1.1 | 1/1 | Complete | 2026-03-03 |
 | 8. Preview Fallback | v1.1 | 0/TBD | Not started | - |

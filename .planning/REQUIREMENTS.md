@@ -21,9 +21,9 @@
 
 ### Groupings
 
-- [ ] **GROUP-01**: Admin can define a field name as a grouping source (e.g. "category") via the settings page
-- [ ] **GROUP-02**: Admin can remove a configured grouping
-- [ ] **GROUP-03**: Plugin injects grouped jobs as `{options.cws_jobs_by_{field}}` via the Etch filter — object keyed by unique field values, each value being an array of matching jobs
+- [x] **GROUP-01**: Admin can define a field name as a grouping source (e.g. "category") via the settings page
+- [x] **GROUP-02**: Admin can remove a configured grouping
+- [x] **GROUP-03**: Plugin injects grouped jobs as `{options.cws_jobs_by_{field}}` via the Etch filter — object keyed by unique field values, each value being an array of matching jobs
 
 ### Preview
 
@@ -60,9 +60,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | QUERY-01 | Phase 6 | Complete (06-01) |
 | QUERY-02 | Phase 6 | Complete (06-01) |
 | QUERY-03 | Phase 6 | Complete (06-01) |
-| GROUP-01 | Phase 7 | Pending |
-| GROUP-02 | Phase 7 | Pending |
-| GROUP-03 | Phase 7 | Pending |
+| GROUP-01 | Phase 7 | Complete (07-01) |
+| GROUP-02 | Phase 7 | Complete (07-01) |
+| GROUP-03 | Phase 7 | Complete (07-01) |
 | PREV-01 | Phase 8 | Pending |
 | PREV-02 | Phase 8 | Pending |
 | PREV-03 | Phase 8 | Pending |
@@ -74,4 +74,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-03-03*
-*Last updated: 2026-03-03 after 06-01 completion (QUERY-01 through QUERY-03 complete — Phase 6 fully shipped)*
+*Last updated: 2026-03-03 after 07-01 completion (GROUP-01 through GROUP-03 complete — Phase 7 fully shipped)*
