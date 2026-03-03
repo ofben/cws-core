@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Admin Tooling & Dynamic Groupings
-status: in-progress
-last_updated: "2026-03-03T12:45:45Z"
+status: unknown
+last_updated: "2026-03-03T12:50:17.166Z"
 progress:
-  total_phases: 2
-  completed_phases: 2
+  total_phases: 3
+  completed_phases: 3
   total_plans: 4
   completed_plans: 4
 ---
