@@ -1,5 +1,27 @@
 # Milestones
 
+## v1.1 Admin Tooling & Dynamic Groupings (Shipped: 2026-03-03)
+
+**Phases completed:** 4 phases (5–8), 5 plans
+**Files changed:** 55 | **PHP LOC:** ~2,511 | **Timeline:** 2026-03-03 (1 day)
+**Commits:** 36 | **Git range:** feat(05-01) → docs(phase-08)
+
+**Delivered:** Site editors gain full visibility and control over the plugin's API configuration — cache health, custom query parameters, field-based job groupings, and a configurable Etch builder preview job.
+
+**Key accomplishments:**
+- Cache status visibility — records fetch timestamp + HTTP status code to wp_options after every live API attempt; admin settings page shows 4 states (no cache, success, HTTP error, connection error)
+- Live cache management — AJAX cache clear resets status display without page reload; `clear_all()` deletes status metadata alongside transients
+- Custom query parameters — admin key/value repeater stores params to wp_options; `build_api_url()` appends all configured params to every outgoing API request
+- Dynamic field groupings — admin-configurable repeater replaces hardcoded `cws_jobs_by_category`/`cws_jobs_by_city`; any API field becomes `{options.cws_jobs_by_{field}}` in Etch templates
+- Configurable Etch preview job — admin sets a specific job ID as the builder preview fallback; `resolve_preview_job()` handles both frontend (`?etch=magic`) and Etch's REST API context
+
+**Tech debt carried forward:**
+- `fetch_job_data()` does not write status metadata on JSON parse failure / invalid response structure paths (stale display only — edge case)
+- `uninstall.php` missing cleanup for all 5 v1.1 wp_options
+- Breaking change: `cws_jobs_by_category`/`cws_jobs_by_city` removed — existing templates require Field Groupings configuration
+
+---
+
 ## v1.0 Dynamic Data Rebuild (Shipped: 2026-03-03)
 
 **Phases completed:** 4 phases, 8 plans

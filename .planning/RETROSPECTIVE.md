@@ -40,6 +40,44 @@
 
 ---
 
+## Milestone: v1.1 — Admin Tooling & Dynamic Groupings
+
+**Shipped:** 2026-03-03
+**Phases:** 4 (5–8) | **Plans:** 5 | **Sessions:** 1 (same day)
+
+### What Was Built
+- Cache status tracking: `fetch_job_data()` writes timestamp + HTTP code to wp_options after every live API attempt; admin settings shows 4 states
+- Live cache management: AJAX clear resets admin status display without page reload
+- Custom query parameters: admin key/value repeater; `build_api_url()` appends all params to every API request URL
+- Dynamic field groupings: replaces two hardcoded Etch variables with a configurable system — any API field becomes `{options.cws_jobs_by_{field}}`
+- Configurable preview job: `resolve_preview_job()` private method covers both `?etch=magic` frontend path and Etch's REST API context (discovered mid-phase)
+
+### What Worked
+- **Repeater pattern reuse** — Phase 6 (query params) established the key/value repeater pattern; Phase 7 (field groupings) used an even simpler flat-array variant of the same pattern; very little rework
+- **Private method extraction** — `resolve_preview_job()` was extracted during Phase 8 when the REST_REQUEST context was discovered; the refactor was cheap because the logic was already in a clean `handle_single_job()` block
+- **Audit after all phases** — running audit immediately after Phase 8 caught the REQUIREMENTS.md stale checkboxes and the JSON parse failure metadata gap; both were low effort to understand and document
+
+### What Was Inefficient
+- **Phase 8 REST_REQUEST discovery** — the Etch builder's REST API context was not anticipated in the plan; it required an extra fix commit (`fix(08-01)`) mid-phase. The CONTEXT.md file noted this risk in phase planning but wasn't surfaced to the plan author. A phase assumption check earlier would have caught it.
+- **REQUIREMENTS.md not updated after Phase 8** — PREV-01/02/03 checkboxes left unchecked after Phase 8 completion; caught in audit. Small process gap but created noise in the 3-source cross-reference.
+
+### Patterns Established
+- **Repeater → option → consumer chain**: all admin settings follow the same pattern: `register_setting()` → `add_settings_field()` → render PHP function → JS add/remove handlers → consumer class reads option. Established in Phase 5, proven in 6, 7, 8.
+- **`resolve_preview_job()` as the canonical preview resolution path**: any future preview-related work should go through or extend this method rather than adding new conditional blocks in `handle_single_job()` or `inject_options()`
+- **REST_REQUEST guard in `inject_options()`**: the guard `defined('REST_REQUEST') && REST_REQUEST && is_user_logged_in()` is the correct pattern for any preview or builder-context behavior in `inject_options()`
+
+### Key Lessons
+1. **Note REST context in phase plans for any Etch builder-facing work** — `template_redirect` does not fire in Etch's REST API calls; always check if the feature needs a `REST_REQUEST` guard in `inject_options()`
+2. **Mark requirements complete immediately after plan execution** — REQUIREMENTS.md stale checkboxes added audit noise; the phase executor should update traceability as the last step
+3. **Breaking changes need release notes** — the removal of `cws_jobs_by_category`/`cws_jobs_by_city` was intentional but caught existing templates off guard; a "Migration" section in MILESTONES.md helps future reference
+
+### Cost Observations
+- Model mix: ~100% sonnet (balanced profile)
+- Sessions: 1 day (all 4 phases shipped same day)
+- Notable: 5 plans with tight scope — average 30–90 min each including verification and UAT
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -47,14 +85,17 @@
 | Milestone | Phases | Plans | Key Change |
 |-----------|--------|-------|------------|
 | v1.0 | 4 | 8 | Initial baseline — filter integration replaces virtual CPT |
+| v1.1 | 4 | 5 | Admin tooling layer; repeater pattern established and reused across 4 phases |
 
 ### Cumulative Quality
 
 | Milestone | Audit | Gaps Found | Gap Resolution |
 |-----------|-------|------------|----------------|
 | v1.0 | Yes | 3 (1 critical, 2 partial) | Phase 4 added to close all gaps |
+| v1.1 | Yes | 0 critical, 2 low (tech debt) | Accepted and carried forward to v1.2 |
 
 ### Top Lessons (Verified Across Milestones)
 
 1. Always audit before archiving — gaps are cheaper to close before a milestone is marked shipped
 2. Normalize data at the injection layer, not in templates
+3. Etch builder uses REST API context — any builder-facing feature needs a `REST_REQUEST` guard in `inject_options()`
