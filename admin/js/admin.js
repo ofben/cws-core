@@ -40,6 +40,10 @@
             // Query parameters repeater
             $('#cws-core-add-query-param').on('click', CWS_Core_Admin.addQueryParamRow);
             $('#cws-core-query-params-list').on('click', '.cws-core-remove-query-param', CWS_Core_Admin.removeQueryParamRow);
+
+            // Field groupings repeater
+            $('#cws-core-add-field-grouping').on('click', CWS_Core_Admin.addFieldGroupingRow);
+            $('#cws-core-field-groupings-list').on('click', '.cws-core-remove-field-grouping', CWS_Core_Admin.removeFieldGroupingRow);
         },
 
         /**
@@ -373,6 +377,31 @@
                     var name = $(this).attr('name');
                     $(this).attr('name', name.replace(/\[\d+\]/, '[' + i + ']'));
                 });
+            });
+        },
+
+        /**
+         * Add a new field grouping row to the repeater
+         */
+        addFieldGroupingRow: function(e) {
+            e.preventDefault();
+            var $list = $('#cws-core-field-groupings-list');
+            var index = $list.find('.cws-core-field-grouping-row').length;
+            var rowHtml = '<div class="cws-core-field-grouping-row" style="display:flex; gap:8px; margin-bottom:6px; align-items:center;">'
+                + '<input type="text" name="cws_core_field_groupings[' + index + ']" value="" placeholder="e.g. primary_category" class="regular-text" style="max-width:220px;" />'
+                + '<button type="button" class="button button-secondary cws-core-remove-field-grouping">Remove</button>'
+                + '</div>';
+            $list.append(rowHtml);
+        },
+
+        /**
+         * Remove a field grouping row and re-index remaining rows
+         */
+        removeFieldGroupingRow: function(e) {
+            e.preventDefault();
+            $(this).closest('.cws-core-field-grouping-row').remove();
+            $('#cws-core-field-groupings-list').find('.cws-core-field-grouping-row').each(function(i) {
+                $(this).find('input').attr('name', 'cws_core_field_groupings[' + i + ']');
             });
         },
 

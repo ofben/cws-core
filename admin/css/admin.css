@@ -233,3 +233,14 @@
 .cws-core-query-param-row input[type="text"] {
     max-width: 200px;
 }
+
+/* Field Groupings Repeater */
+.cws-core-field-grouping-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 6px;
+    align-items: center;
+}
+.cws-core-field-grouping-row input[type="text"] {
+    max-width: 220px;
+}
