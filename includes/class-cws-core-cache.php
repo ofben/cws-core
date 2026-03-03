@@ -167,6 +167,10 @@ class CWS_Core_Cache {
             wp_cache_flush_group( 'transient' );
         }
 
+        // Clear fetch metadata so the admin UI shows "no cache" state after a manual clear.
+        delete_option( 'cws_core_last_fetch_time' );
+        delete_option( 'cws_core_last_fetch_status' );
+
         if ( $this->plugin ) {
             $this->plugin->log( sprintf( 'Cleared %d cache entries', $deleted ), 'info' );
         }
