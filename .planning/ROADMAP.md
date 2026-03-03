@@ -37,11 +37,10 @@ Full details: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 ### Phase 9: Tech Debt Cleanup
 **Goal:** Close v1.1 audit gaps and remove accumulated dead code
 **Gap Closure:** Closes GAP-1 and GAP-2 from v1.1-MILESTONE-AUDIT.md
+**Plans:** 1 plan
 
-- [ ] Fix `fetch_job_data()` to write status metadata on JSON parse failure path (`class-cws-core-api.php` lines 174-178)
-- [ ] Fix `fetch_job_data()` to write status metadata on invalid response structure path (`class-cws-core-api.php` lines 182-186)
-- [ ] Add all 5 v1.1 options to `$options_to_delete` in `uninstall.php`
-- [ ] Remove dead `testVirtualCPT` AJAX method and handler from `admin.js`
+Plans:
+- [ ] 09-01-PLAN.md — Fix error-path status writes, uninstall cleanup, remove dead JS
 
 ---
 
