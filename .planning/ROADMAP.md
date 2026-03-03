@@ -52,7 +52,9 @@ Plans:
   1. Admin can add a new key/value query parameter row via a repeater field in the settings page
   2. Admin can remove any individual query parameter row from the settings page
   3. All configured query parameters appear in every outgoing API request URL
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 06-01-PLAN.md — Query params repeater UI + option registration + API URL injection
 
 ### Phase 7: Field Groupings
 **Goal**: Admin can define field-based groupings so that jobs are automatically exposed as grouped Etch template variables
@@ -83,6 +85,6 @@ Plans:
 | 3. Preview and Polish | v1.0 | 2/2 | Complete | 2026-03-02 |
 | 4. Integration Cleanup | v1.0 | 1/1 | Complete | 2026-03-02 |
 | 5. Cache Status & Controls | 2/2 | Complete   | 2026-03-03 | - |
-| 6. Query Parameters | v1.1 | 0/TBD | Not started | - |
+| 6. Query Parameters | v1.1 | 0/1 | Not started | - |
 | 7. Field Groupings | v1.1 | 0/TBD | Not started | - |
 | 8. Preview Fallback | v1.1 | 0/TBD | Not started | - |
