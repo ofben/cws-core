@@ -39,7 +39,10 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
   2. Admin can see whether the last API fetch succeeded or failed, with the HTTP status code displayed
   3. Admin can see how old the current cache is in human-readable form (e.g. "2 hours ago")
   4. Admin can click a button on the settings page to clear the full jobs list cache immediately
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 05-01-PLAN.md — Record fetch metadata (timestamp + HTTP code) to persistent options
+- [ ] 05-02-PLAN.md — Render cache status in admin UI + JS reset on cache clear
 
 ### Phase 6: Query Parameters
 **Goal**: Admin can define key/value query parameter pairs in settings that are appended to every API request
@@ -79,7 +82,7 @@ Full details: [milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md)
 | 2. Single Job Routing | v1.0 | 3/3 | Complete | 2026-03-01 |
 | 3. Preview and Polish | v1.0 | 2/2 | Complete | 2026-03-02 |
 | 4. Integration Cleanup | v1.0 | 1/1 | Complete | 2026-03-02 |
-| 5. Cache Status & Controls | v1.1 | 0/TBD | Not started | - |
+| 5. Cache Status & Controls | v1.1 | 0/2 | Not started | - |
 | 6. Query Parameters | v1.1 | 0/TBD | Not started | - |
 | 7. Field Groupings | v1.1 | 0/TBD | Not started | - |
 | 8. Preview Fallback | v1.1 | 0/TBD | Not started | - |
