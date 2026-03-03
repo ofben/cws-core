@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: Dynamic Data Rebuild
-status: complete
+milestone: v1.1
+milestone_name: Admin Tooling & Dynamic Groupings
+status: active
 last_updated: "2026-03-03T00:00:00.000Z"
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 8
-  completed_plans: 8
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
@@ -18,12 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Job data from the external API reliably available in any Etch template via `etch/dynamic_data/option` — survives Etch upgrades
-**Current focus:** Planning next milestone
+**Current focus:** v1.1 — Admin Tooling & Dynamic Groupings
 
 ## Current Position
 
-Milestone v1.0 shipped — 4 phases, 8 plans complete.
-Next: `/gsd:new-milestone` to start next milestone cycle.
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-03 — Milestone v1.1 started
 
 ## Performance Metrics
 

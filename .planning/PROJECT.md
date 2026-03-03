@@ -8,6 +8,17 @@ A WordPress plugin that fetches job data from a public API and makes it availabl
 
 Job data from the external API is reliably available in any Etch template via the official `etch/dynamic_data/option` filter — works across Etch upgrades, requires no workarounds.
 
+## Current Milestone: v1.1 Admin Tooling & Dynamic Groupings
+
+**Goal:** Give site editors visibility and control over API configuration — cache status, query params, field-based job groupings, and a configurable builder preview fallback.
+
+**Target features:**
+- Cache status tracking (last fetch success/fail, HTTP code, timestamp)
+- Cache management controls (clear all jobs cache, clear per-job transients)
+- Query parameters UI (key/value repeater appended to API requests)
+- Field groupings UI (define field → auto-expose `{options.cws_jobs_by_{field}}` in Etch)
+- Configurable builder preview fallback (set job ID for `?etch=magic` in admin)
+
 ## Requirements
 
 ### Validated
@@ -27,7 +38,11 @@ Job data from the external API is reliably available in any Etch template via th
 
 ### Active
 
-*(No active requirements — planning next milestone)*
+- [ ] Cache status tracking — last fetch success/fail, HTTP status code, timestamp visible in admin
+- [ ] Cache management controls — clear all jobs cache; clear per-job transients; see cache age
+- [ ] Query parameters UI — key/value repeater in admin settings; params appended to API requests
+- [ ] Field groupings UI — define field name in admin; plugin auto-exposes `{options.cws_jobs_by_{field}}` in Etch
+- [ ] Configurable builder preview fallback — admin setting for which job ID loads when `?etch=magic` is active
 
 ### Out of Scope
 
@@ -73,4 +88,4 @@ The virtual CPT approach (2,494 lines, 20+ hooks) has been fully removed and rep
 | `format_job_data()` as single normalization path | Consistent schema between listing and single-job contexts | ✓ Good — closes cross-phase inconsistency gap |
 
 ---
-*Last updated: 2026-03-03 after v1.0 milestone*
+*Last updated: 2026-03-03 after v1.1 milestone start*
