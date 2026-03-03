@@ -325,6 +325,7 @@ class CWS_Core_Admin {
                     <div class="cws-core-admin-box">
                         <h3><?php esc_html_e( 'Cache Management', 'cws-core' ); ?></h3>
                         <p><?php esc_html_e( 'Manage cached data and view cache statistics.', 'cws-core' ); ?></p>
+                        <?php $this->render_cache_status_block(); ?>
                         <button type="button" class="button button-secondary" id="cws-core-clear-cache">
                             <?php esc_html_e( 'Clear Cache', 'cws-core' ); ?>
                         </button>
@@ -698,6 +699,76 @@ class CWS_Core_Admin {
                 sprintf( 'Job slug changed from "%s" to "%s" — rewrite rules flushed', $old_value, $new_value ),
                 'info'
             );
+        }
+    }
+
+    /**
+     * Render the cache status block.
+     *
+     * Displays cache age, HTTP status, and timestamp, or a "No cache" message
+     * when no fetch has been recorded yet. Output is used as the server-rendered
+     * initial state for the #cws-core-cache-status element.
+     */
+    private function render_cache_status_block() {
+        $last_time   = get_option( 'cws_core_last_fetch_time', 0 );
+        $last_status = get_option( 'cws_core_last_fetch_status', null );
+
+        if ( empty( $last_time ) ) {
+            ?>
+            <div id="cws-core-cache-status" style="margin-bottom:8px; color:#646970; font-size:13px;">
+                <?php esc_html_e( 'No cache — will refresh on next page load', 'cws-core' ); ?>
+            </div>
+            <?php
+            return;
+        }
+
+        $status_code  = (int) $last_status;
+        $abs_datetime = wp_date( 'Y-m-d H:i', (int) $last_time );
+        $age          = human_time_diff( (int) $last_time, time() ) . ' ' . __( 'ago', 'cws-core' );
+
+        if ( 200 === $status_code ) {
+            ?>
+            <div id="cws-core-cache-status" style="margin-bottom:8px; font-size:13px;">
+                <?php
+                echo esc_html(
+                    sprintf(
+                        /* translators: 1: relative age (e.g. "2 hours ago"), 2: HTTP status code */
+                        __( 'Last refreshed: %1$s — HTTP %2$s', 'cws-core' ),
+                        $age,
+                        $status_code
+                    )
+                );
+                ?>
+                <br>
+                <span style="color:#646970; font-size:12px;">(<?php echo esc_html( $abs_datetime ); ?>)</span>
+            </div>
+            <?php
+        } elseif ( 0 === $status_code ) {
+            ?>
+            <div id="cws-core-cache-status" style="margin-bottom:8px; font-size:13px;">
+                <span style="color:#d63638;"><?php esc_html_e( 'Last attempt failed — connection error', 'cws-core' ); ?></span>
+                <br>
+                <span style="color:#646970; font-size:12px;">(<?php echo esc_html( $abs_datetime ); ?>)</span>
+            </div>
+            <?php
+        } else {
+            ?>
+            <div id="cws-core-cache-status" style="margin-bottom:8px; font-size:13px;">
+                <span style="color:#d63638;">
+                    <?php
+                    echo esc_html(
+                        sprintf(
+                            /* translators: %d: HTTP status code */
+                            __( 'Last attempt failed — HTTP %d', 'cws-core' ),
+                            $status_code
+                        )
+                    );
+                    ?>
+                </span>
+                <br>
+                <span style="color:#646970; font-size:12px;">(<?php echo esc_html( $abs_datetime ); ?>)</span>
+            </div>
+            <?php
         }
     }
 
